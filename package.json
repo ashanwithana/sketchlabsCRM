@@ -6,6 +6,8 @@
     "dev": "next dev",
     "build": "next build && node scripts/fix-symlinks.js",
     "start": "next start",
+    "deploy": "npm run build",
+    "preview": "npm run build && npm run start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
