@@ -29,6 +29,16 @@ let cached: Env | undefined;
 
 export function getEnv(): Env {
   if (cached) return cached;
+
+  // Debug logging for Vercel
+  if (process.env.NODE_ENV === "production") {
+    console.log("🔍 Environment Check:");
+    console.log("DATABASE_URL present:", !!process.env.DATABASE_URL);
+    console.log("DATABASE_URL starts with:", process.env.DATABASE_URL?.substring(0, 30));
+    console.log("SESSION_SECRET present:", !!process.env.SESSION_SECRET);
+    console.log("All env keys:", Object.keys(process.env).filter(k => k.includes("DATABASE") || k.includes("SESSION") || k.includes("ADMIN")));
+  }
+
   const parsed = schema.safeParse(process.env);
   if (!parsed.success) {
     const problems = parsed.error.issues.map((i) => `${i.path.join(".")}: ${i.message}`).join("; ");
