@@ -12,13 +12,20 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // For Cloudflare Pages compatibility, we need to handle external packages carefully.
-  // Puppeteer won't work on Cloudflare Pages anyway (no Chromium), so we exclude it here
-  // to avoid symlink errors during deployment.
-  serverExternalPackages: ["nodemailer"],
+  // For Cloudflare Pages: don't create symlinks for external packages
+  // Puppeteer won't work on Pages anyway (no Chromium), so we exclude it
+  // This prevents the "contains links to files that can't be accessed" error
+  serverExternalPackages: [],
   webpack: (config, { isServer }) => {
     if (isServer) {
-      config.externals = [...(config.externals || []), "puppeteer", "puppeteer-core"];
+      // Mark these as external so they're not bundled or symlinked
+      config.externals = [
+        ...(Array.isArray(config.externals) ? config.externals : [config.externals || {}]),
+        "puppeteer",
+        "puppeteer-core",
+        "nodemailer",
+        "@prisma/client",
+      ].filter(Boolean);
     }
     return config;
   },

@@ -9,37 +9,61 @@ const path = require('path');
 
 const nodeModulesPath = path.join(__dirname, '../.next/node_modules');
 
+console.log('🔍 Checking for symlinks in .next directory...');
+
 if (!fs.existsSync(nodeModulesPath)) {
-  console.log('✓ .next/node_modules not found (standalone build), skipping symlink cleanup');
+  console.log('✓ .next/node_modules not found, skipping symlink cleanup');
   process.exit(0);
 }
 
 let removedCount = 0;
+let errorCount = 0;
 
-function walkDir(dir) {
+function walkDir(dir, depth = 0) {
+  // Prevent infinite loops
+  if (depth > 20) return;
+
   try {
     const files = fs.readdirSync(dir);
-    
+
     for (const file of files) {
       const fullPath = path.join(dir, file);
-      const stat = fs.lstatSync(fullPath);
-      
-      if (stat.isSymbolicLink()) {
-        try {
-          fs.unlinkSync(fullPath);
-          removedCount++;
-          console.log(`Removed symlink: ${fullPath}`);
-        } catch (err) {
-          console.error(`Failed to remove symlink ${fullPath}:`, err.message);
+
+      try {
+        const stat = fs.lstatSync(fullPath);
+
+        if (stat.isSymbolicLink()) {
+          try {
+            fs.unlinkSync(fullPath);
+            removedCount++;
+            console.log(`  ✓ Removed: ${path.relative(process.cwd(), fullPath)}`);
+          } catch (unlinkErr) {
+            errorCount++;
+            console.error(`  ✗ Failed to remove: ${fullPath}`, unlinkErr.message);
+          }
+        } else if (stat.isDirectory() && !stat.isSymbolicLink()) {
+          walkDir(fullPath, depth + 1);
         }
-      } else if (stat.isDirectory()) {
-        walkDir(fullPath);
+      } catch (statErr) {
+        // Skip files we can't stat (often symlinks to non-existent targets)
       }
     }
   } catch (err) {
-    console.error(`Error walking directory ${dir}:`, err.message);
+    console.error(`Error reading directory ${dir}:`, err.message);
   }
 }
 
 walkDir(nodeModulesPath);
-console.log(`✓ Removed ${removedCount} symlinks from .next/node_modules`);
+
+if (removedCount > 0) {
+  console.log(`\n✓ Successfully removed ${removedCount} symlinks`);
+} else {
+  console.log(`\n✓ No symlinks found to remove`);
+}
+
+if (errorCount > 0) {
+  console.warn(`⚠ Warning: ${errorCount} symlinks could not be removed`);
+  process.exit(1);
+}
+
+process.exit(0);
