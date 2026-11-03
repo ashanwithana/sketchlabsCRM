@@ -32,11 +32,14 @@ git push origin main
 
 In Cloudflare Pages → **Settings** → **Environment variables**, add:
 
+⚠️ **IMPORTANT:** Add `PUPPETEER_SKIP_DOWNLOAD=true` first! This prevents Puppeteer from trying to download Chromium during build, which will fail and cause the symlink error.
+
 ### Production Environment
 
 | Variable | Value |
 |----------|-------|
 | `NODE_VERSION` | `20` |
+| `PUPPETEER_SKIP_DOWNLOAD` | `true` |
 | `DATABASE_URL` | `postgresql://postgres:[PASSWORD]@db.[PROJECT_ID].supabase.co:5432/postgres` |
 | `SESSION_SECRET` | Generate with: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` |
 | `ADMIN_EMAIL` | Your admin email |
