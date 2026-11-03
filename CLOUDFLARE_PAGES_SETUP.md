@@ -23,9 +23,10 @@ git push origin main
 3. Choose **Connect to Git** (GitHub, GitLab, or Gitea)
 4. Select your repository and branch
 5. Choose build settings:
-   - **Framework:** Next.js
+   - **Framework:** None (Custom)
    - **Build command:** `npm run build`
    - **Build output directory:** `.next`
+   - **Root directory:** `/` (if asked)
 
 ## Step 3: Set Environment Variables
 
@@ -87,6 +88,7 @@ Common issues:
 - Missing environment variables
 - Node version mismatch (set `NODE_VERSION=20`)
 - TypeScript errors (run `npm run typecheck` locally first)
+- **Symlink errors** ("contains links to files that can't be accessed"): This is normal with Next.js + Puppeteer. See the fix below.
 
 ### PDF Generation Not Working
 
@@ -104,6 +106,23 @@ Currently, uploaded logos/signatures/PDFs won't persist between deploys. For pro
 - **AWS S3**
 
 See `README.md` for storage setup details.
+
+## Fixing Symlink Errors on Cloudflare
+
+If you see: **"build output directory contains links to files that can't be accessed"**
+
+This happens because Next.js creates symlinks to `serverExternalPackages` (puppeteer, nodemailer, etc.), which Cloudflare Pages can't handle.
+
+**Solution:**
+1. In Cloudflare Pages settings, add a build environment variable:
+   ```
+   NEXT_SKIP_OUTPUT_VALIDATION=true
+   ```
+   (or) Set the build output to ignore symlink validation
+
+2. Alternatively, use a function-based deployment (Cloudflare Workers) instead of Pages
+
+3. For a quick fix, comment out `serverExternalPackages` in `next.config.ts` (though Puppeteer PDF generation won't work)
 
 ## Updating Your App
 
