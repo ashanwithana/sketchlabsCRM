@@ -1,0 +1,13 @@
+# Cloudflare Pages configuration for Next.js
+name = "client-manager"
+type = "javascript"
+compatibility_date = "2024-11-01"
+
+# Tell Cloudflare Pages where the build output is
+pages_build_output_dir = ".next"
+
+[build]
+command = "npm run build"
+
+[env.production]
+name = "client-manager-prod"

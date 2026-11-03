@@ -12,23 +12,10 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // For Cloudflare Pages: don't create symlinks for external packages
-  // Puppeteer won't work on Pages anyway (no Chromium), so we exclude it
-  // This prevents the "contains links to files that can't be accessed" error
-  serverExternalPackages: [],
-  webpack: (config, { isServer }) => {
-    if (isServer) {
-      // Mark these as external so they're not bundled or symlinked
-      config.externals = [
-        ...(Array.isArray(config.externals) ? config.externals : [config.externals || {}]),
-        "puppeteer",
-        "puppeteer-core",
-        "nodemailer",
-        "@prisma/client",
-      ].filter(Boolean);
-    }
-    return config;
-  },
+  // For Cloudflare Workers/Pages: use standalone output to bundle all dependencies
+  output: "standalone",
+  // Puppeteer and other external packages need to be bundled for Workers
+  serverExternalPackages: ["puppeteer", "puppeteer-core", "nodemailer"],
 };
 
 export default nextConfig;
