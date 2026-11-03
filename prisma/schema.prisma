@@ -1,0 +1,279 @@
+// Database schema for the Client Management & Document Automation System.
+// SQLite is used for local development. To move to Postgres (Supabase/Neon),
+// change `provider` to "postgresql" and set DATABASE_URL. Enum-like fields are
+// stored as strings and validated in the application layer (src/lib/constants.ts)
+// so the same schema works on both databases.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         String   @default("ADMIN") // ADMIN | STAFF
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+// Single row (id = "company") holding business identity used on every PDF.
+model CompanySettings {
+  id                 String   @id @default("company")
+  companyName        String   @default("Your Company Name")
+  tagline            String?
+  addressLine        String?
+  phone              String?
+  email              String?
+  website            String?
+  registrationNumber String?
+  vatNumber          String?
+  bankName           String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankBranch         String?
+  currency           String   @default("USD")
+  defaultTaxRateBp   Int      @default(0) // basis points: 1500 = 15.00%
+  defaultValidDays   Int      @default(30)
+  logoPath           String?
+  signaturePath      String?  // prepared-by signature image
+  quotationTerms     String   @default("Prices are valid until the expiry date shown. Payment terms: 50% advance, balance on completion.")
+  crTerms            String   @default("The customer confirms the scope of work above and authorises the company to proceed.")
+  maintenanceTerms   String   @default("Service reports are issued for the equipment listed. Recommendations are advisory.")
+  emailQuotationSubject   String @default("Quotation {{number}} from {{company}}")
+  emailQuotationBody      String @default("Dear {{contact}},\n\nPlease find attached quotation {{number}}, valid until {{date}}.\n\nKind regards,\n{{company}}")
+  emailCrSubject          String @default("CR {{number}} from {{company}}")
+  emailCrBody             String @default("Dear {{contact}},\n\nPlease find attached customer request document {{number}}.\n\nKind regards,\n{{company}}")
+  emailMaintenanceSubject String @default("Maintenance report {{number}} from {{company}}")
+  emailMaintenanceBody    String @default("Dear {{contact}},\n\nPlease find attached the maintenance report {{number}}.\n\nKind regards,\n{{company}}")
+  updatedAt          DateTime @updatedAt
+}
+
+// Gap-free, transactional counters for document and client numbers.
+model Sequence {
+  key       String @id // e.g. "CL" or "QT-2026"
+  value     Int    @default(0)
+}
+
+model Client {
+  id                 String   @id @default(cuid())
+  clientCode         String   @unique // CL-0001, generated, never reused
+  companyName        String
+  contactPerson      String
+  email              String
+  phone              String
+  billingAddress     String
+  registrationNumber String
+  vatNumber          String?
+  category           String   // CORPORATE | SME | GOVERNMENT | NONPROFIT | INDIVIDUAL
+  notes              String?
+  archivedAt         DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  equipment   Equipment[]
+  documents   Document[]
+  emailLogs   EmailLog[]
+}
+
+model Equipment {
+  id           String   @id @default(cuid())
+  clientId     String
+  client       Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name         String
+  model        String?
+  serialNumber String?
+  location     String?
+  installedOn  DateTime?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  maintenanceRecords MaintenanceRecord[]
+
+  @@index([clientId])
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  unitPrice   Int      // minor units (cents)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Unified registry: one row per quotation, CR, or maintenance record.
+model Document {
+  id              String   @id @default(cuid())
+  type            String   // QUOTATION | CR | MAINTENANCE
+  number          String   @unique // QT-2026-0001, CR-2026-0001, MR-2026-0001
+  clientId        String
+  client          Client   @relation(fields: [clientId], references: [id])
+  status          String   // per-type status, see constants.ts
+  issueDate       DateTime @default(now())
+  currentRevision Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  quotation      Quotation?
+  cr             CRDocument?
+  maintenance    MaintenanceRecord?
+  revisions      DocumentRevision[]
+  emailLogs      EmailLog[]
+
+  @@index([clientId])
+  @@index([type])
+  @@index([issueDate])
+}
+
+model Quotation {
+  id            String   @id @default(cuid())
+  documentId    String   @unique
+  document      Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  validUntil    DateTime
+  subtotal      Int      @default(0) // minor units
+  discountTotal Int      @default(0)
+  taxTotal      Int      @default(0)
+  grandTotal    Int      @default(0)
+  currency      String   @default("USD")
+  terms         String?
+  notes         String?
+  approvedAt    DateTime?
+  approvalToken String?  @unique // hashed token for the public approval link
+  approvalTokenExpiresAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  items QuotationItem[]
+  crs   CRDocument[]
+}
+
+model QuotationItem {
+  id          String    @id @default(cuid())
+  quotationId String
+  quotation   Quotation @relation(fields: [quotationId], references: [id], onDelete: Cascade)
+  position    Int
+  description String
+  quantity    Int
+  unitPrice   Int   // minor units
+  discount    Int   @default(0) // minor units, per line
+  taxRateBp   Int   @default(0)
+  lineSubtotal Int  @default(0)
+  lineTax      Int  @default(0)
+  lineTotal    Int  @default(0)
+
+  @@index([quotationId])
+}
+
+model CRDocument {
+  id                   String   @id @default(cuid())
+  documentId           String   @unique
+  document             Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  quotationId          String?
+  quotation            Quotation? @relation(fields: [quotationId], references: [id])
+  requestDetails       String
+  scopeOfWork          String
+  deliveryDate         DateTime?
+  customerRequirements String?
+  remarks              String?
+  approvalName         String?
+  approvalDate         DateTime?
+  customerSignature    String?  // data URL from signature pad
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([quotationId])
+}
+
+model MaintenanceRecord {
+  id                    String    @id @default(cuid())
+  documentId            String    @unique
+  document              Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  equipmentId           String?
+  equipment             Equipment? @relation(fields: [equipmentId], references: [id])
+  maintenanceDate       DateTime
+  nextMaintenanceDate   DateTime?
+  description           String
+  workPerformed         String?
+  technicianName        String?
+  technicianDetails     String?
+  customerRemarks       String?
+  recommendations       String?
+  customerSignature     String?
+  technicianSignature   String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  parts MaintenancePart[]
+
+  @@index([equipmentId])
+}
+
+model MaintenancePart {
+  id          String            @id @default(cuid())
+  recordId    String
+  record      MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  name        String
+  quantity    Int               @default(1)
+  notes       String?
+
+  @@index([recordId])
+}
+
+// Every generated PDF is stored as a revision. Unchanged content reuses the revision.
+model DocumentRevision {
+  id          String   @id @default(cuid())
+  documentId  String
+  document    Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  revision    Int
+  contentHash String
+  snapshot    String   // JSON of the content used to render the PDF
+  filePath    String   // relative path inside storage/
+  createdAt   DateTime @default(now())
+
+  emailLogs   EmailLog[]
+
+  @@unique([documentId, revision])
+}
+
+model EmailLog {
+  id          String   @id @default(cuid())
+  documentId  String?
+  document    Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  revisionId  String?
+  revision    DocumentRevision? @relation(fields: [revisionId], references: [id], onDelete: SetNull)
+  clientId    String?
+  client      Client?  @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  toAddress   String
+  ccAddress   String?
+  subject     String
+  body        String
+  attachment  String?
+  outboxPath  String?  // dev outbox .eml file, when SMTP is not configured
+  status      String   // QUEUED | SENT | FAILED
+  mode        String   // SMTP | DEV_OUTBOX
+  error       String?
+  createdAt   DateTime @default(now())
+
+  @@index([documentId])
+  @@index([clientId])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  action     String   // CREATE | UPDATE | DELETE | STATUS | EMAIL | PDF | LOGIN ...
+  entityType String
+  entityId   String?
+  summary    String
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+}
