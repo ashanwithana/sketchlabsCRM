@@ -3,8 +3,6 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
-  // Puppeteer runs Chrome as a child process and must not be bundled.
-  serverExternalPackages: ["puppeteer", "puppeteer-core", "nodemailer"],
   partialPrefetching: true,
   turbopack: {
     rules: {
@@ -13,6 +11,16 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  // For Cloudflare Pages compatibility, we need to handle external packages carefully.
+  // Puppeteer won't work on Cloudflare Pages anyway (no Chromium), so we exclude it here
+  // to avoid symlink errors during deployment.
+  serverExternalPackages: ["nodemailer"],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), "puppeteer", "puppeteer-core"];
+    }
+    return config;
   },
 };
 

@@ -88,7 +88,7 @@ Common issues:
 - Missing environment variables
 - Node version mismatch (set `NODE_VERSION=20`)
 - TypeScript errors (run `npm run typecheck` locally first)
-- **Symlink errors** ("contains links to files that can't be accessed"): This is normal with Next.js + Puppeteer. See the fix below.
+- **Symlink errors** ("contains links to files that can't be accessed"): **This is now fixed!** A post-build script removes symlinks automatically.
 
 ### PDF Generation Not Working
 
@@ -109,20 +109,14 @@ See `README.md` for storage setup details.
 
 ## Fixing Symlink Errors on Cloudflare
 
-If you see: **"build output directory contains links to files that can't be accessed"**
+✅ **This is already fixed!** A post-build script (`scripts/fix-symlinks.js`) automatically removes symlinks from `.next/node_modules` after the build completes. This solves the Cloudflare Pages error: **"build output directory contains links to files that can't be accessed"**
 
-This happens because Next.js creates symlinks to `serverExternalPackages` (puppeteer, nodemailer, etc.), which Cloudflare Pages can't handle.
+When you deploy, the build will:
+1. Build Next.js normally
+2. Run `scripts/fix-symlinks.js` to remove symlinks
+3. Upload the clean `.next` directory to Cloudflare
 
-**Solution:**
-1. In Cloudflare Pages settings, add a build environment variable:
-   ```
-   NEXT_SKIP_OUTPUT_VALIDATION=true
-   ```
-   (or) Set the build output to ignore symlink validation
-
-2. Alternatively, use a function-based deployment (Cloudflare Workers) instead of Pages
-
-3. For a quick fix, comment out `serverExternalPackages` in `next.config.ts` (though Puppeteer PDF generation won't work)
+No additional configuration needed!
 
 ## Updating Your App
 
