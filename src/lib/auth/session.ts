@@ -1,6 +1,5 @@
 import "server-only";
 import { cookies } from "next/headers";
-import { connection } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { getEnv } from "@/lib/env";
 import { db } from "@/lib/db";
@@ -49,8 +48,6 @@ export async function clearSessionCookie() {
  * changed account loses access immediately, even with a still-valid token.
  */
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  // Session data is per request, so the route must render at request time, not at build.
-  await connection();
   const store = await cookies();
   const token = store.get(SESSION_COOKIE)?.value;
   if (!token) return null;
