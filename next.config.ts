@@ -12,9 +12,7 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // For Cloudflare Workers/Pages: use standalone output to bundle all dependencies
-  output: "standalone",
-  // Puppeteer and other external packages need to be bundled for Workers
+  // Puppeteer runs Chrome as a child process and must not be bundled.
   serverExternalPackages: ["puppeteer", "puppeteer-core", "nodemailer"],
 };
 
