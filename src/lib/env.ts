@@ -19,10 +19,6 @@ const schema = z.object({
   SMTP_USER: z.string().optional().default(""),
   SMTP_PASSWORD: z.string().optional().default(""),
   SMTP_FROM: z.string().optional().default(""),
-  // EmailJS configuration (alternative to SMTP)
-  EMAILJS_SERVICE_ID: z.string().optional().default(""),
-  EMAILJS_TEMPLATE_ID: z.string().optional().default(""),
-  EMAILJS_PUBLIC_KEY: z.string().optional().default(""),
   // Optional path to a Chrome/Chromium binary for PDF rendering. Auto-detected on macOS if unset.
   PDF_CHROME_PATH: z.string().optional().default(""),
 });
