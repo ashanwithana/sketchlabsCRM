@@ -168,7 +168,7 @@ export function AppShell({ userName, userEmail, children }: Props) {
           <span className="text-sm font-semibold">SketchLabsCRM</span>
         </header>
 
-        <main id="main" className="relative flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8" style={{ backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px)` }}>
+        <main id="main" className="relative flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8" style={{ backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 8px, rgba(244, 237, 224, 0.04) 8px, rgba(244, 237, 224, 0.04) 16px)` }}>
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
