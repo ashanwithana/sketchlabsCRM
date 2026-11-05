@@ -84,7 +84,7 @@ export function AppShell({ userName, userEmail, children }: Props) {
 
   const brand = (
     <div className="flex items-center gap-3 px-5 py-5">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-primary text-white shadow-lg shadow-indigo-950/40">
+      <span className="flex size-9 items-center justify-center rounded-lg bg-coral text-white shadow-lg shadow-coral/40">
         <LayoutList className="size-5" />
       </span>
       <div className="leading-tight">
@@ -97,7 +97,7 @@ export function AppShell({ userName, userEmail, children }: Props) {
   const userFooter = (
     <div className="border-t border-white/10 p-4">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-indigo-500/20 text-xs font-semibold text-indigo-200">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-coral/20 text-xs font-semibold text-coral">
           {initials || "U"}
         </span>
         <div className="min-w-0 flex-1">
