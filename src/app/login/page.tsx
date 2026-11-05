@@ -16,6 +16,21 @@ export default async function LoginPage({
 
   return (
     <main className="relative min-h-dvh overflow-hidden" style={{ background: 'linear-gradient(135deg, var(--color-navy) 0%, #1a2a4a 50%, var(--color-navy) 100%)' }}>
+      {/* Vertical striped lines pattern */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: `repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(255, 255, 255, 0.05) 2px,
+            rgba(255, 255, 255, 0.05) 4px
+          )`,
+        }}
+      />
+
       {/* Gradient overlay with coral accent */}
       <div
         aria-hidden
