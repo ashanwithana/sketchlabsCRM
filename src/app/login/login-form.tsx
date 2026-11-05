@@ -16,12 +16,12 @@ export function LoginForm({ next }: { next: string }) {
       <input type="hidden" name="next" value={next} />
 
       {state.error && (
-        <div role="alert" className="rounded-lg border border-danger-soft bg-danger-soft px-3 py-2 text-sm text-danger">
+        <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'rgba(255, 107, 91, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'var(--color-coral)' }}>
           {state.error}
         </div>
       )}
 
-      <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email}>
+      <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email} className="text-white">
         <Input
           id="email"
           name="email"
@@ -30,20 +30,24 @@ export function LoginForm({ next }: { next: string }) {
           autoFocus
           aria-invalid={Boolean(state.fieldErrors?.email)}
           placeholder="you@company.com"
+          style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'white' } as React.CSSProperties}
+          className="placeholder:text-white/50"
         />
       </Field>
 
-      <Field label="Password" htmlFor="password" required error={state.fieldErrors?.password}>
+      <Field label="Password" htmlFor="password" required error={state.fieldErrors?.password} className="text-white">
         <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           aria-invalid={Boolean(state.fieldErrors?.password)}
+          style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'white' } as React.CSSProperties}
+          className="placeholder:text-white/50"
         />
       </Field>
 
-      <Button type="submit" size="lg" className="w-full" disabled={pending}>
+      <Button type="submit" size="lg" className="w-full mt-6" disabled={pending}>
         {pending && <Loader2 className="animate-spin" aria-hidden />}
         {pending ? "Signing in…" : "Sign in"}
       </Button>

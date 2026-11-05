@@ -53,17 +53,17 @@ export default async function LoginPage({
             <p className="text-base" style={{ color: 'var(--color-cream)' }}>Manage clients and documents with ease</p>
           </div>
 
-          {/* Login Card */}
+          {/* Login Card - Dark glassmorphic design */}
           <div
-            className="rounded-3xl backdrop-blur-xl border p-8 shadow-2xl"
+            className="rounded-3xl backdrop-blur-md border p-8 shadow-2xl"
             style={{
-              background: 'rgba(244, 237, 224, 0.95)',
-              borderColor: 'var(--color-coral)',
-              borderWidth: '2px'
+              background: 'rgba(20, 33, 61, 0.4)',
+              borderColor: 'rgba(255, 107, 91, 0.3)',
+              borderWidth: '1px'
             }}
           >
-            <h2 className="text-2xl font-semibold tracking-tight mb-2" style={{ color: 'var(--color-navy)' }}>Welcome back</h2>
-            <p className="text-sm mb-8" style={{ color: 'var(--color-navy)' }}>Sign in to your account to continue</p>
+            <h2 className="text-2xl font-semibold tracking-tight mb-2 text-white">Welcome back</h2>
+            <p className="text-sm mb-8" style={{ color: 'var(--color-cream)' }}>Sign in to your account to continue</p>
             <LoginForm next={safeNext} />
           </div>
 
