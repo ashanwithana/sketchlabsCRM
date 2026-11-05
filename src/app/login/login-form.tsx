@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Field, Input } from "@/components/ui/form-controls";
+import { Input } from "@/components/ui/form-controls";
 import { loginAction, type LoginState } from "./actions";
 
 const initialState: LoginState = {};
@@ -12,16 +12,16 @@ export function LoginForm({ next }: { next: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
 
   return (
-    <form action={formAction} className="space-y-5" noValidate>
+    <form action={formAction} className="space-y-4" noValidate>
       <input type="hidden" name="next" value={next} />
 
       {state.error && (
-        <div role="alert" className="rounded-lg border px-3 py-2 text-sm" style={{ background: 'rgba(255, 107, 91, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'var(--color-coral)' }}>
+        <div role="alert" className="text-sm text-center font-light p-2" style={{ color: 'var(--color-coral)' }}>
           {state.error}
         </div>
       )}
 
-      <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email} className="text-white font-medium">
+      <div>
         <Input
           id="email"
           name="email"
@@ -29,27 +29,53 @@ export function LoginForm({ next }: { next: string }) {
           autoComplete="email"
           autoFocus
           aria-invalid={Boolean(state.fieldErrors?.email)}
-          placeholder="you@company.com"
-          style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 107, 91, 0.5)', color: 'white', fontSize: '16px' } as React.CSSProperties}
-          className="placeholder:text-white/60 font-medium"
+          placeholder="Your email address"
+          style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '300',
+            padding: '12px 16px'
+          } as React.CSSProperties}
+          className="placeholder:text-white/40 w-full"
         />
-      </Field>
+        {state.fieldErrors?.email && (
+          <p className="text-xs mt-1 font-light" style={{ color: 'var(--color-coral)' }}>{state.fieldErrors.email}</p>
+        )}
+      </div>
 
-      <Field label="Password" htmlFor="password" required error={state.fieldErrors?.password} className="text-white font-medium">
+      <div>
         <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           aria-invalid={Boolean(state.fieldErrors?.password)}
-          style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 107, 91, 0.5)', color: 'white', fontSize: '16px' } as React.CSSProperties}
-          className="placeholder:text-white/60 font-medium"
+          placeholder="Password"
+          style={{
+            background: 'rgba(255, 255, 255, 0.06)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            color: 'white',
+            fontSize: '14px',
+            fontWeight: '300',
+            padding: '12px 16px'
+          } as React.CSSProperties}
+          className="placeholder:text-white/40 w-full"
         />
-      </Field>
+        {state.fieldErrors?.password && (
+          <p className="text-xs mt-1 font-light" style={{ color: 'var(--color-coral)' }}>{state.fieldErrors.password}</p>
+        )}
+      </div>
 
-      <Button type="submit" size="lg" className="w-full mt-6" disabled={pending}>
+      <Button
+        type="submit"
+        className="w-full mt-6 font-light text-base py-3"
+        style={{ background: 'white', color: 'black' }}
+        disabled={pending}
+      >
         {pending && <Loader2 className="animate-spin" aria-hidden />}
-        {pending ? "Signing in…" : "Sign in"}
+        {pending ? "Verifying" : "Initiate Authentication"}
       </Button>
     </form>
   );

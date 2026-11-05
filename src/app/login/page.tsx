@@ -15,59 +15,71 @@ export default async function LoginPage({
   const safeNext = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
 
   return (
-    <main className="relative min-h-screen overflow-hidden flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--color-navy) 0%, #1a2a4a 50%, var(--color-navy) 100%)' }}>
-      {/* Vertical striped lines pattern */}
+    <main className="relative min-h-screen overflow-hidden flex items-center justify-center" style={{ background: '#0a0a0a' }}>
+      {/* Vertical grid lines */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          backgroundImage: `repeating-linear-gradient(
-            90deg,
-            transparent,
-            transparent 2px,
-            rgba(255, 255, 255, 0.05) 2px,
-            rgba(255, 255, 255, 0.05) 4px
-          )`,
+          backgroundImage: `linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px)`,
+          backgroundSize: '80px auto'
         }}
       />
 
-      {/* Gradient overlay with coral accent */}
+      {/* Horizontal grid lines */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          background: 'radial-gradient(circle at 60% 40%, var(--color-coral) 0%, transparent 50%), radial-gradient(circle at 20% 80%, rgba(255, 107, 91, 0.1) 0%, transparent 40%)',
+          backgroundImage: `linear-gradient(0deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px)`,
+          backgroundSize: 'auto 80px'
+        }}
+      />
+
+      {/* Subtle radial glows */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(circle at 50% 50%, rgba(255, 107, 91, 0.05) 0%, transparent 60%)
+          `,
         }}
       />
 
       <div className="relative w-full max-w-md px-4">
-        {/* Brand */}
-        <div className="mb-12 text-center">
-          <div className="mb-6 flex justify-center">
-            <span className="flex size-14 items-center justify-center rounded-2xl" style={{ background: 'var(--color-coral)' }}>
-              <LayoutDashboard className="size-7 text-white" />
-            </span>
+        {/* Decorative corner markers */}
+        <div className="absolute -top-6 -left-6 w-6 h-6 border-t-2 border-l-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}></div>
+        <div className="absolute -top-6 -right-6 w-6 h-6 border-t-2 border-r-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}></div>
+        <div className="absolute -bottom-6 -left-6 w-6 h-6 border-b-2 border-l-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}></div>
+        <div className="absolute -bottom-6 -right-6 w-6 h-6 border-b-2 border-r-2" style={{ borderColor: 'rgba(255, 255, 255, 0.3)' }}></div>
+
+        {/* Logo */}
+        <div className="mb-12 flex justify-center">
+          <div className="flex size-12 items-center justify-center" style={{ background: 'var(--color-cream)' }}>
+            <LayoutDashboard className="size-6" style={{ color: 'var(--color-navy)' }} />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white mb-2">SketchLabsCRM</h1>
-          <p className="text-base font-medium" style={{ color: 'var(--color-cream)' }}>Manage clients and documents with ease</p>
         </div>
 
-        {/* Login Card - Dark glassmorphic design */}
+        {/* Main Card */}
         <div
-          className="rounded-3xl backdrop-blur-md border p-8 shadow-2xl"
+          className="p-8 relative"
           style={{
-            background: 'rgba(20, 33, 61, 0.5)',
-            borderColor: 'rgba(255, 107, 91, 0.4)',
-            borderWidth: '1px'
+            background: 'rgba(20, 20, 20, 0.7)',
+            border: '2px solid rgba(255, 255, 255, 0.15)',
+            backdropFilter: 'blur(10px)'
           }}
         >
-          <h2 className="text-2xl font-bold tracking-tight mb-2 text-white">Welcome back</h2>
-          <p className="text-sm mb-8 font-medium opacity-90" style={{ color: 'var(--color-cream)' }}>Sign in to your account to continue</p>
-          <LoginForm next={safeNext} />
-        </div>
+          <h2 className="text-2xl font-light tracking-wide mb-2 text-center" style={{ color: 'white' }}>Sign in with Email</h2>
+          <p className="text-sm text-center mb-8 font-light" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>Enter your email address to receive a verification code</p>
 
-        {/* Footer text */}
-        <p className="mt-8 text-center text-sm font-medium" style={{ color: 'var(--color-cream)' }}>Authorised users only. Activity is logged.</p>
+          <LoginForm next={safeNext} />
+
+          {/* Footer */}
+          <p className="mt-8 text-center text-xs font-light" style={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+            🔒 Protected by encryption
+          </p>
+        </div>
       </div>
     </main>
   );
