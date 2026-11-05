@@ -83,13 +83,13 @@ export function AppShell({ userName, userEmail, children }: Props) {
   );
 
   const brand = (
-    <div className="flex items-center gap-3 px-5 py-5">
-      <span className="flex size-9 items-center justify-center rounded-lg bg-coral text-white shadow-lg shadow-coral/40">
+    <div className="flex items-center gap-3 px-5 py-6 border-b" style={{ borderColor: 'rgba(255, 107, 91, 0.2)' }}>
+      <span className="flex size-10 items-center justify-center rounded-xl text-white shadow-lg" style={{ background: 'var(--color-coral)' }}>
         <LayoutList className="size-5" />
       </span>
       <div className="leading-tight">
-        <p className="text-sm font-semibold text-white">Client Manager</p>
-        <p className="text-xs text-slate-400">Documents & clients</p>
+        <p className="text-sm font-bold text-white">Client Manager</p>
+        <p className="text-xs opacity-70 text-white">Documents & clients</p>
       </div>
     </div>
   );
@@ -121,7 +121,7 @@ export function AppShell({ userName, userEmail, children }: Props) {
   return (
     <div className="min-h-dvh lg:flex">
       {/* Desktop sidebar */}
-      <aside className="no-print sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-sidebar lg:flex">
+      <aside className="no-print sticky top-0 hidden h-dvh w-64 shrink-0 flex-col bg-sidebar lg:flex" style={{ background: 'linear-gradient(180deg, var(--color-navy) 0%, #1a2a4a 100%)' }}>
         {brand}
         {nav}
         {userFooter}
@@ -136,7 +136,7 @@ export function AppShell({ userName, userEmail, children }: Props) {
             className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
             onClick={() => setDrawerOpen(false)}
           />
-          <aside className="animate-fade-up absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col bg-sidebar shadow-pop">
+          <aside className="animate-fade-up absolute inset-y-0 left-0 flex w-72 max-w-[85%] flex-col shadow-pop" style={{ background: 'linear-gradient(180deg, var(--color-navy) 0%, #1a2a4a 100%)' }}>
             <div className="flex items-center justify-between">
               {brand}
               <button
