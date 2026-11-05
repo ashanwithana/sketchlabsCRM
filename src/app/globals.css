@@ -36,6 +36,20 @@
   --color-info-soft: #e0f2fe;
   --color-info: #0284c7;
 
+  /* New custom colors: Navy, Cream, Coral */
+  --color-navy: #001f3f;
+  --color-navy-light: #003d7a;
+  --color-navy-soft: #e6f0ff;
+  
+  --color-cream: #f5f1e8;
+  --color-cream-light: #faf8f3;
+  --color-cream-dark: #e8e3d8;
+  
+  --color-coral: #ff6b6b;
+  --color-coral-hover: #ee5a52;
+  --color-coral-soft: #ffe6e6;
+  --color-coral-light: #ffb3b3;
+
   --radius-card: 14px;
   --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
   --shadow-pop: 0 10px 30px -10px rgb(15 23 42 / 0.25);
