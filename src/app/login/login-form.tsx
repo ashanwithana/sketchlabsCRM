@@ -21,7 +21,7 @@ export function LoginForm({ next }: { next: string }) {
         </div>
       )}
 
-      <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email} className="text-white">
+      <Field label="Email" htmlFor="email" required error={state.fieldErrors?.email} className="text-white font-medium">
         <Input
           id="email"
           name="email"
@@ -30,20 +30,20 @@ export function LoginForm({ next }: { next: string }) {
           autoFocus
           aria-invalid={Boolean(state.fieldErrors?.email)}
           placeholder="you@company.com"
-          style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'white' } as React.CSSProperties}
-          className="placeholder:text-white/50"
+          style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 107, 91, 0.5)', color: 'white', fontSize: '16px' } as React.CSSProperties}
+          className="placeholder:text-white/60 font-medium"
         />
       </Field>
 
-      <Field label="Password" htmlFor="password" required error={state.fieldErrors?.password} className="text-white">
+      <Field label="Password" htmlFor="password" required error={state.fieldErrors?.password} className="text-white font-medium">
         <Input
           id="password"
           name="password"
           type="password"
           autoComplete="current-password"
           aria-invalid={Boolean(state.fieldErrors?.password)}
-          style={{ background: 'rgba(255, 255, 255, 0.1)', borderColor: 'rgba(255, 107, 91, 0.3)', color: 'white' } as React.CSSProperties}
-          className="placeholder:text-white/50"
+          style={{ background: 'rgba(255, 255, 255, 0.15)', borderColor: 'rgba(255, 107, 91, 0.5)', color: 'white', fontSize: '16px' } as React.CSSProperties}
+          className="placeholder:text-white/60 font-medium"
         />
       </Field>
 

@@ -88,8 +88,8 @@ export function AppShell({ userName, userEmail, children }: Props) {
         <LayoutList className="size-5" />
       </span>
       <div className="leading-tight">
-        <p className="text-sm font-bold text-white">Client Manager</p>
-        <p className="text-xs opacity-70 text-white">Documents & clients</p>
+        <p className="text-sm font-bold text-white">SketchLabsCRM</p>
+        <p className="text-xs opacity-70 text-white">CRM & Documents</p>
       </div>
     </div>
   );
@@ -165,10 +165,10 @@ export function AppShell({ userName, userEmail, children }: Props) {
           >
             <Menu className="size-5" />
           </button>
-          <span className="text-sm font-semibold">Client Manager</span>
+          <span className="text-sm font-semibold">SketchLabsCRM</span>
         </header>
 
-        <main id="main" className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main id="main" className="relative flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8" style={{ backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px)` }}>
           <div className="mx-auto w-full max-w-7xl">{children}</div>
         </main>
       </div>
