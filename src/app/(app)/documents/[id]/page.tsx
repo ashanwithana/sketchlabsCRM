@@ -75,7 +75,6 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                     <th className="px-5 py-3 font-medium">Revision</th>
                     <th className="px-5 py-3 font-medium">Created</th>
                     <th className="px-5 py-3 font-medium">Content fingerprint</th>
-                    <th className="px-5 py-3 text-right font-medium">File</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -91,11 +90,6 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
                         {r.createdAt.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
                       </td>
                       <td className="num px-5 py-3 text-xs text-subtle" title={r.contentHash}>{r.contentHash.slice(0, 12)}…</td>
-                      <td className="px-5 py-3 text-right">
-                        <a href={`/api/documents/${id}/revisions/${r.revision}`} className="inline-flex items-center gap-1 font-medium text-primary hover:underline">
-                          <Download className="size-3.5" /> PDF
-                        </a>
-                      </td>
                     </tr>
                   ))}
                 </tbody>

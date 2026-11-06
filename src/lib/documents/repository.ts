@@ -100,7 +100,7 @@ export async function getDocumentForRepository(id: string) {
     include: {
       client: { select: { id: true, companyName: true, clientCode: true, contactPerson: true, email: true } },
       quotation: { select: { validUntil: true, grandTotal: true, currency: true } },
-      revisions: { orderBy: { revision: "desc" }, select: { id: true, revision: true, contentHash: true, filePath: true, createdAt: true } },
+      revisions: { orderBy: { revision: "desc" }, select: { id: true, revision: true, contentHash: true, createdAt: true } },
       emailLogs: { orderBy: { createdAt: "desc" }, take: 50 },
     },
   });

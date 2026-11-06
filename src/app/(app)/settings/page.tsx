@@ -58,7 +58,7 @@ export default async function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <p className="text-muted">
-            A backup contains the full database and every stored file (logos, signatures, PDF revisions, and emails). It can be made while the app is running.
+            A backup contains the full database and every stored file (logos, signatures, and emails). It can be made while the app is running.
           </p>
           <div className="flex flex-wrap items-center gap-3">
             {isAdmin ? (

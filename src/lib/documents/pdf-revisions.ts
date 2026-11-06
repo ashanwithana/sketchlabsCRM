@@ -1,11 +1,9 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import fs from "node:fs/promises";
-import path from "node:path";
 import { db } from "@/lib/db";
 import { logActivity } from "@/lib/activity";
 import { getCompanySettings } from "@/lib/settings";
-import { contentTypeFor, deleteStoredFile, readStoredFile, resolveStoragePath } from "@/lib/storage";
+import { contentTypeFor, readStoredFile } from "@/lib/storage";
 import { QuotationDocument, type QuotationPdfData } from "@/lib/pdf/quotation-template";
 import { PDF_TEMPLATE_VERSION } from "@/lib/pdf/layout";
 import { renderHtml, htmlToPdf } from "@/lib/pdf/render";
@@ -167,13 +165,10 @@ export function snapshotHash(snapshot: unknown): string {
   return sha256(JSON.stringify(snapshot));
 }
 
-function revisionPath(documentId: string, revision: number) {
-  return path.posix.join("documents", documentId, `rev-${revision}.pdf`);
-}
-
 /**
- * Returns the PDF for a document. If the printed content has not changed since the latest
- * revision, that revision's PDF is returned. Otherwise a new revision is rendered and stored.
+ * Renders the PDF for a document from its current data. PDFs are never written to
+ * storage: every request re-renders, so nothing grows on disk. A revision row is only
+ * recorded when the printed content changes, keeping the change history small.
  */
 export async function ensurePdfRevision(documentId: string, actor: string): Promise<PdfResult> {
   const source = await loadSource(documentId);
@@ -184,46 +179,29 @@ export async function ensurePdfRevision(documentId: string, actor: string): Prom
     orderBy: { revision: "desc" },
   });
 
-  if (latest && latest.contentHash === hash) {
-    try {
-      const buffer = await readStoredFile(latest.filePath);
-      return { buffer, revision: latest.revision, reference: source.doc.number, reused: true };
-    } catch {
-      // The file was removed from storage. Fall through and render it again under the same revision.
-    }
-  }
-
   const html = await renderHtml(source.element);
   const buffer = await htmlToPdf(html, source.doc.number);
 
-  const current = await db.document.findUniqueOrThrow({ where: { id: documentId }, select: { currentRevision: true } });
-  const sameRevisionMissing = latest && latest.contentHash === hash;
-  const revision = sameRevisionMissing ? latest.revision : current.currentRevision + 1;
-  const relative = revisionPath(documentId, revision);
-
-  const full = resolveStoragePath(relative);
-  await fs.mkdir(path.dirname(full), { recursive: true });
-  await fs.writeFile(full, buffer, { mode: 0o600 });
-
-  if (!sameRevisionMissing) {
-    await db.$transaction([
-      db.documentRevision.create({
-        data: { documentId, revision, contentHash: hash, snapshot: JSON.stringify(source.snapshot), filePath: relative },
-      }),
-      db.document.update({ where: { id: documentId }, data: { currentRevision: revision } }),
-    ]);
-    await logActivity({
-      action: "PDF",
-      entityType: "Quotation",
-      entityId: documentId,
-      summary: `${actor} generated ${source.doc.number} revision ${revision}`,
-    });
+  // Unchanged content keeps its existing revision number and creates no new record.
+  if (latest && latest.contentHash === hash) {
+    return { buffer, revision: latest.revision, reference: source.doc.number, reused: true };
   }
 
-  return { buffer, revision, reference: source.doc.number, reused: false };
-}
+  const current = await db.document.findUniqueOrThrow({ where: { id: documentId }, select: { currentRevision: true } });
+  const revision = current.currentRevision + 1;
 
-/** Removes a stored PDF file. Used by tests and by the backup restore flow. */
-export async function removeRevisionFile(relative: string) {
-  await deleteStoredFile(relative);
+  await db.$transaction([
+    db.documentRevision.create({
+      data: { documentId, revision, contentHash: hash, snapshot: JSON.stringify(source.snapshot), filePath: "" },
+    }),
+    db.document.update({ where: { id: documentId }, data: { currentRevision: revision } }),
+  ]);
+  await logActivity({
+    action: "PDF",
+    entityType: "Quotation",
+    entityId: documentId,
+    summary: `${actor} generated ${source.doc.number} revision ${revision}`,
+  });
+
+  return { buffer, revision, reference: source.doc.number, reused: false };
 }

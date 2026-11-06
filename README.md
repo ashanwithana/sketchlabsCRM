@@ -28,9 +28,9 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Prisma w
 - **Quotations:** Line items with discount and tax, live totals, automatic `QT-YYYY-####` numbers, statuses (Draft, Sent, Pending, Approved, Rejected, Expired), duplicate, client approval links.
 - **CR documents:** Linked to a quotation of the same client, scope pre-filled from the quotation, customer signature pad, `CR-YYYY-####` numbers.
 - **Maintenance:** Service records with equipment, parts, work performed, technician and customer signatures, automatic next-service scheduling, upcoming and overdue views, equipment service history.
-- **PDFs:** Shared layout with logo, company details, reference, client block, content, bank details, terms, signature blocks, and "Page X of Y" footers. Each change creates a new revision; unchanged content reuses the stored file.
+- **PDFs:** Shared layout with logo, company details, reference, client block, content, bank details, terms, signature blocks, and "Page X of Y" footers. PDFs are rendered on demand from the current data and are never stored on disk; each content change is recorded as a small revision entry.
 - **Email:** Send any document with its latest PDF attached, editable templates with placeholders, delivery log with retry for failures, test email.
-- **Repository:** One place for every document. Search by client or number, filter by type, status, and issue date, see revision history, download any past revision, CSV export.
+- **Repository:** One place for every document. Search by client or number, filter by type, status, and issue date, see revision history, CSV export.
 - **Backup and recovery:** Consistent database snapshot plus stored files, verified restore with an automatic safety copy.
 
 ## Requirements
@@ -114,6 +114,8 @@ With `SMTP_HOST` empty, every email is written to `storage/outbox/*.eml` with th
 
 PDFs are rendered by Chrome from HTML, so the layout matches the on-screen preview. Chrome runs headless and blocks all network requests while rendering, so a document cannot load remote content.
 
+PDFs are generated fresh on every request and are never written to disk, so nothing accumulates over time. Viewing, downloading, and emailing all render from the current database state.
+
 - **Local (macOS):** Install Google Chrome. Nothing else is needed.
 - **Linux server:** Install Chromium (`apt install chromium` or your distribution's package), then set `PDF_CHROME_PATH=/usr/bin/chromium`.
 - **Container:** Use an image with Chromium installed, and run the app as a non-root user.
@@ -123,7 +125,7 @@ If no Chrome is available at all, the PDF route returns a clear error and the re
 
 ## Backup and recovery
 
-Backups contain the database and every stored file (logos, signatures, PDF revisions, outbox). They can be made while the app is running.
+Backups contain the database and every stored file (logos, signatures, outbox). They can be made while the app is running.
 
 ```bash
 npm run backup                                  # writes backups/backup-<timestamp>.tar.gz

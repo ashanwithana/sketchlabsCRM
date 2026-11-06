@@ -4,7 +4,6 @@ import { logActivity } from "@/lib/activity";
 import { getEnv } from "@/lib/env";
 import { getCompanySettings } from "@/lib/settings";
 import { ensurePdfRevision } from "@/lib/documents/pdf-revisions";
-import { readStoredFile } from "@/lib/storage";
 import { formatMoney } from "@/lib/money";
 import { setQuotationStatus } from "@/lib/quotations/service";
 import { parseRecipients } from "./recipients";
@@ -144,19 +143,21 @@ export async function sendDocumentEmail(input: SendInput, actor: string, deliver
   return result;
 }
 
-/** Re-sends a failed email with the same recipients, message, and stored PDF revision. */
+/** Re-sends a failed email with the same recipients, message, and a freshly rendered PDF. */
 export async function retryEmail(logId: string, actor: string, deliverFn: DeliverFn = deliver): Promise<SendResult> {
-  const log = await db.emailLog.findUnique({ where: { id: logId }, include: { revision: true } });
+  const log = await db.emailLog.findUnique({ where: { id: logId } });
   if (!log) throw new EmailError("This email could not be found.");
   if (log.status !== "FAILED") throw new EmailError("Only failed emails can be retried.");
 
   let attachment: { filename: string; content: Buffer; contentType: string } | null = null;
   if (log.attachment) {
-    if (!log.revision) throw new EmailError("The PDF for this email is no longer stored. Send it again from the document.");
+    if (!log.documentId) throw new EmailError("This email has no document to render a PDF from.");
+    // PDFs are not stored, so the document is rendered again from its current data.
     try {
-      attachment = { filename: log.attachment, content: await readStoredFile(log.revision.filePath), contentType: "application/pdf" };
+      const fresh = await ensurePdfRevision(log.documentId, actor);
+      attachment = { filename: log.attachment, content: fresh.buffer, contentType: "application/pdf" };
     } catch {
-      throw new EmailError("The PDF for this email is missing from storage. Send it again from the document.");
+      throw new EmailError("The PDF for this email could not be rendered again. Send it again from the document.");
     }
   }
 
