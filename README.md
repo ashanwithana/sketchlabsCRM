@@ -36,7 +36,7 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Prisma w
 ## Requirements
 
 - Node.js 20 or newer (tested on Node 26) and npm.
-- **Google Chrome or Chromium** for PDF generation. On macOS the app finds `/Applications/Google Chrome.app` automatically. Elsewhere, set `PDF_CHROME_PATH`.
+- **Google Chrome or Chromium** for PDF generation. On macOS the app finds `/Applications/Google Chrome.app` automatically. Elsewhere, set `PDF_CHROME_PATH`. Hosts without any browser (serverless) can use a remote Chrome via `PUPPETEER_WS_ENDPOINT`.
 - Optional: an SMTP account for real email delivery. Without one, emails are saved as files (see [Email](#email)).
 
 ## Setup
@@ -75,6 +75,7 @@ Before the first real use, open **Settings** and enter your company name, addres
 | `SMTP_USER`, `SMTP_PASSWORD` | no | SMTP login. Use an app password where the provider requires one. |
 | `SMTP_FROM` | no | Sender address shown to clients, for example `Acme <billing@acme.example>`. Defaults to the company email. |
 | `PDF_CHROME_PATH` | no | Path to a Chrome or Chromium binary. Auto-detected on macOS. |
+| `PUPPETEER_WS_ENDPOINT` | no | WebSocket URL of a remote headless Chrome (e.g. `wss://production-sfo.browserless.io?token=...`) for hosts without Chrome, such as Vercel. Takes precedence over `PDF_CHROME_PATH`. |
 | `STORAGE_DIR` | no | Where logos, signatures, PDFs, and the outbox are stored. Default `storage/`. |
 | `BACKUP_DIR` | no | Where backups are written. Default `backups/`. |
 
@@ -116,8 +117,9 @@ PDFs are rendered by Chrome from HTML, so the layout matches the on-screen previ
 - **Local (macOS):** Install Google Chrome. Nothing else is needed.
 - **Linux server:** Install Chromium (`apt install chromium` or your distribution's package), then set `PDF_CHROME_PATH=/usr/bin/chromium`.
 - **Container:** Use an image with Chromium installed, and run the app as a non-root user.
+- **Serverless (Vercel and similar):** No Chrome can run in the function bundle, so point the app at a hosted headless Chrome instead: set `PUPPETEER_WS_ENDPOINT` to its WebSocket URL (for example Browserless: `wss://production-sfo.browserless.io?token=YOUR_TOKEN`). The app connects there for rendering and never launches a browser locally.
 
-If Chrome is missing, the PDF route returns a clear error and the rest of the app keeps working.
+If no Chrome is available at all, the PDF route returns a clear error and the rest of the app keeps working.
 
 ## Backup and recovery
 

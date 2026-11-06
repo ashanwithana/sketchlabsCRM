@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
 import { nextNumber } from "@/lib/numbering";
-import { pdfEngineAvailable, getBrowser } from "@/lib/pdf/browser";
+import { closeBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
 import { createQuotation, updateQuotation } from "@/lib/quotations/service";
 import { quotationSchema, type QuotationInput } from "@/lib/validation/quotation";
 import { ensurePdfRevision, snapshotHash } from "./pdf-revisions";
@@ -47,8 +47,7 @@ describeIfChrome("PDF revisions (requires Chrome)", () => {
   });
 
   afterAll(async () => {
-    const browser = await getBrowser().catch(() => null);
-    await browser?.close();
+    await closeBrowser();
   });
 
   it("creates revision 1 on first generation", async () => {

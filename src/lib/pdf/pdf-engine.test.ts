@@ -1,8 +1,7 @@
 import { describe, expect, it, afterAll } from "vitest";
 import { htmlToPdf, renderHtml } from "./render";
 import { QuotationDocument } from "./quotation-template";
-import { pdfEngineAvailable } from "./browser";
-import { getBrowser } from "./browser";
+import { closeBrowser, pdfEngineAvailable } from "./browser";
 
 const sample = {
   reference: "QT-TEST-0001",
@@ -55,8 +54,7 @@ const describeIfChrome = pdfEngineAvailable() ? describe : describe.skip;
 
 describeIfChrome("PDF engine (requires Chrome)", () => {
   afterAll(async () => {
-    const browser = await getBrowser().catch(() => null);
-    await browser?.close();
+    await closeBrowser();
   });
 
   it("produces a valid multi-page PDF with page numbers in the footer", async () => {

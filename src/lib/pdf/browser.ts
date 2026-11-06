@@ -5,6 +5,8 @@ import { getEnv } from "@/lib/env";
 
 // One headless Chrome is shared by all PDF requests. Each render gets its own page.
 // Launching Chrome costs about a second, so it is started on first use and reused.
+// On hosts without Chrome (serverless, containers without a browser package) the
+// app connects to a remote headless Chrome through PUPPETEER_WS_ENDPOINT instead.
 
 const MAC_CHROME = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
 
@@ -16,34 +18,63 @@ export function resolveChromePath(): string | null {
   return null;
 }
 
+/** True when a PDF can be rendered: a remote endpoint is configured or a local Chrome exists. */
 export function pdfEngineAvailable(): boolean {
-  return resolveChromePath() !== null;
+  return getEnv().PUPPETEER_WS_ENDPOINT !== "" || resolveChromePath() !== null;
+}
+
+/** Connects to the configured browser: a remote endpoint when set, otherwise a local Chrome. */
+async function openBrowser(): Promise<Browser> {
+  const endpoint = getEnv().PUPPETEER_WS_ENDPOINT;
+  if (endpoint) return puppeteer.connect({ browserWSEndpoint: endpoint });
+
+  const executablePath = resolveChromePath();
+  if (!executablePath) {
+    throw new Error(
+      "No Chrome found for PDF generation. Install Google Chrome, set PDF_CHROME_PATH in .env to a Chrome or Chromium binary, or set PUPPETEER_WS_ENDPOINT to a remote Chrome.",
+    );
+  }
+  return puppeteer.launch({
+    executablePath,
+    headless: true,
+    args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
+  });
 }
 
 let browserPromise: Promise<Browser> | null = null;
 
 export async function getBrowser(): Promise<Browser> {
-  if (!browserPromise) {
-    const executablePath = resolveChromePath();
-    if (!executablePath) {
-      throw new Error(
-        "No Chrome found for PDF generation. Install Google Chrome or set PDF_CHROME_PATH in .env to a Chrome or Chromium binary.",
-      );
-    }
-    browserPromise = puppeteer
-      .launch({
-        executablePath,
-        headless: true,
-        args: ["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu"],
-      })
-      .catch((err) => {
-        browserPromise = null;
-        throw err;
-      });
-    const browser = await browserPromise;
-    browser.on("disconnected", () => {
-      browserPromise = null;
-    });
+  // Reuse the open browser unless it has gone away. A remote endpoint can drop
+  // without the disconnect event firing, so the connection state is checked too.
+  if (browserPromise) {
+    const open = await browserPromise.catch(() => null);
+    if (open?.connected) return open;
+    browserPromise = null;
   }
-  return browserPromise;
+
+  const pending = openBrowser().catch((err: unknown) => {
+    if (browserPromise === pending) browserPromise = null;
+    throw err;
+  });
+  browserPromise = pending;
+
+  const browser = await pending;
+  browser.on("disconnected", () => {
+    if (browserPromise === pending) browserPromise = null;
+  });
+  return browser;
+}
+
+/**
+ * Tears down the shared browser: closes one we launched locally, but only
+ * disconnects from a remote endpoint, whose browser is shared and stays running.
+ */
+export async function closeBrowser(): Promise<void> {
+  const pending = browserPromise;
+  browserPromise = null;
+  if (!pending) return;
+  const browser = await pending.catch(() => null);
+  if (!browser) return;
+  if (getEnv().PUPPETEER_WS_ENDPOINT) browser.disconnect();
+  else await browser.close().catch(() => undefined);
 }

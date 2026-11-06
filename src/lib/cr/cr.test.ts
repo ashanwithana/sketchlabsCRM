@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { ensurePdfRevision } from "@/lib/documents/pdf-revisions";
-import { getBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
+import { closeBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
 import { db } from "@/lib/db";
 import { nextNumber } from "@/lib/numbering";
 import { createQuotation } from "@/lib/quotations/service";
@@ -220,7 +220,7 @@ describe("CR PDF revisions (requires Chrome)", () => {
     crId = (await createCr(crSchema.parse({ ...base({ clientId: client.id }) }), "Tester")).id;
   });
   afterAll(async () => {
-    await getBrowser().then((b) => b.close()).catch(() => undefined);
+    await closeBrowser();
   });
 
   it("renders a CR PDF as revision 1 and reuses it when nothing changed", async () => {

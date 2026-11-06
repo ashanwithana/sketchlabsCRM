@@ -21,6 +21,9 @@ const schema = z.object({
   SMTP_FROM: z.string().optional().default(""),
   // Optional path to a Chrome/Chromium binary for PDF rendering. Auto-detected on macOS if unset.
   PDF_CHROME_PATH: z.string().optional().default(""),
+  // Optional WebSocket URL of a remote headless Chrome for hosts without one (e.g. Vercel).
+  // When set, PDF rendering connects here instead of launching a local Chrome.
+  PUPPETEER_WS_ENDPOINT: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof schema>;

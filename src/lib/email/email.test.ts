@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { db } from "@/lib/db";
 import { nextNumber } from "@/lib/numbering";
-import { pdfEngineAvailable, getBrowser } from "@/lib/pdf/browser";
+import { closeBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
 import { createQuotation } from "@/lib/quotations/service";
 import { quotationSchema } from "@/lib/validation/quotation";
 import { parseRecipients } from "./recipients";
@@ -164,8 +164,7 @@ describeIfChrome("document email with PDF attachment (requires Chrome)", () => {
   });
 
   afterAll(async () => {
-    const browser = await getBrowser().catch(() => null);
-    await browser?.close();
+    await closeBrowser();
   });
 
   it("sends the PDF as an attachment, logs it, and moves a draft to Sent", async () => {

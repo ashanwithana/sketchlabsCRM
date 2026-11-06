@@ -7,7 +7,7 @@ import { listMaintenance } from "./queries";
 import { renderHtml } from "@/lib/pdf/render";
 import { MaintenanceDocument } from "@/lib/pdf/maintenance-template";
 import { ensurePdfRevision } from "@/lib/documents/pdf-revisions";
-import { getBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
+import { closeBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
 
 const base = (overrides: Partial<MaintenanceInput> = {}): MaintenanceInput => ({
   clientId: "",
@@ -242,7 +242,7 @@ describeIfChrome("maintenance PDF revisions (requires Chrome)", () => {
     id = created.id;
   });
   afterAll(async () => {
-    await getBrowser().then((b) => b.close()).catch(() => undefined);
+    await closeBrowser();
   });
   it("renders a maintenance report PDF as revision 1 and reuses it", async () => {
     const first = await ensurePdfRevision(id, "Tester");
