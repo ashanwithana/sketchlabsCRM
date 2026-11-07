@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
+import { connection } from "next/server";
 import { getEnv } from "@/lib/env";
 import { runScheduledInvoices } from "@/lib/invoices/service";
 
 // Daily billing cron. Vercel Cron calls this at the schedule in vercel.json and sends
 // `Authorization: Bearer <CRON_SECRET>` when that environment variable is configured.
 // The run generates and emails at most one invoice per client whose due date has arrived.
-export const dynamic = "force-dynamic";
-
 export async function GET(req: Request) {
+  await connection(); // never cached: the run must happen at request time
   const { CRON_SECRET } = getEnv();
   if (!CRON_SECRET) {
     return NextResponse.json({ error: "CRON_SECRET is not configured." }, { status: 500 });
