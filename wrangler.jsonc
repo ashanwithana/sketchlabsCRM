@@ -16,6 +16,13 @@
       "bucket_name": "company-storage"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "company_db",
+      "database_name": "company-db",
+      "database_id": "073528b0-890e-4c24-a14f-8fcfca12ffd5"
+    }
+  ],
   "triggers": {
     "crons": [
       "0 4 * * *"

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 // Server-only environment. Read lazily so importing this module during build does not fail.
 const schema = z.object({
-  DATABASE_URL: z.string().min(1),
+  DATABASE_URL: z.string().optional().default("file:./dev.db"),
   SESSION_SECRET: z
     .string()
     .min(32, "SESSION_SECRET must be at least 32 characters. Generate one with: openssl rand -base64 48"),

@@ -1,28 +1,40 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
+import { PrismaD1 } from "@prisma/adapter-d1";
 
-// One Prisma client per process. Reusing it avoids exhausting connections during hot reload.
-const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
+let localPrisma: PrismaClient | null = null;
+const d1ClientCache = new WeakMap<object, PrismaClient>();
 
-function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
+export function getDb(): PrismaClient {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { getCloudflareContext } = require("@opennextjs/cloudflare");
+    const ctx = getCloudflareContext();
+    const d1 = ctx?.env?.company_db ?? ctx?.env?.DB;
+    if (d1) {
+      let client = d1ClientCache.get(d1);
+      if (!client) {
+        const adapter = new PrismaD1(d1);
+        client = new PrismaClient({ adapter });
+        d1ClientCache.set(d1, client);
+      }
+      return client;
+    }
+  } catch {
+    // Not running inside a Cloudflare request context (e.g. build time, local script, or tests)
+  }
 
-  // When connecting to Postgres (Cloudflare Workers or local Postgres), use the driver adapter
-  if (connectionString?.startsWith("postgres://") || connectionString?.startsWith("postgresql://")) {
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaPg(pool);
-    return new PrismaClient({
-      adapter,
+  if (!localPrisma) {
+    localPrisma = new PrismaClient({
       log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
     });
   }
-
-  return new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
-  });
+  return localPrisma;
 }
 
-export const db = globalForPrisma.prisma ?? createPrismaClient();
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;
+export const db: PrismaClient = new Proxy({} as PrismaClient, {
+  get(_target, prop) {
+    const client = getDb();
+    const value = Reflect.get(client, prop);
+    return typeof value === "function" ? value.bind(client) : value;
+  },
+});
