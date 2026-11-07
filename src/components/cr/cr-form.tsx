@@ -176,7 +176,7 @@ export function CrForm({
           <Link href={mode === "edit" && id ? `/cr/${id}` : "/cr"} className={buttonVariants({ variant: "secondary", size: "lg" })}>
             Cancel
           </Link>
-          <p className="pt-2 text-xs text-muted">The CR number is assigned when you save. Signing here records the customer’s approval on the PDF.</p>
+          <p className="pt-2 text-xs text-muted">The CR number is assigned when you save. Approve the CR to allow quotations to be created against it.</p>
         </div>
       </aside>
 
