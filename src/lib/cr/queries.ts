@@ -60,10 +60,10 @@ export async function listCrOptions() {
     where: { type: "CR", status: "APPROVED" },
     orderBy: { issueDate: "desc" },
     take: 300,
-    include: { cr: { select: { cost: true } } },
+    include: { cr: { select: { id: true } } },
   });
   return docs.map((d) => ({
-    id: d.id,
+    id: d.cr!.id,
     number: d.number,
     clientId: d.clientId,
     status: d.status,
