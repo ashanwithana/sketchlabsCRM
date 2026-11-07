@@ -12,6 +12,8 @@ import { RetryEmailButton } from "@/components/email/email-controls";
 import { deliveryLabel } from "@/components/email/email-status";
 import { requireUser } from "@/lib/auth/session";
 import { getCrDetail } from "@/lib/cr/queries";
+import { formatMoney } from "@/lib/money";
+import { getCompanySettings } from "@/lib/settings";
 import { buildEmailDefaults } from "@/lib/email/send";
 import { listEmailLogsForDocument } from "@/lib/email/queries";
 
@@ -25,7 +27,7 @@ export default async function CrDetailPage({ params }: { params: Promise<{ id: s
   const doc = await getCrDetail(id);
   if (!doc?.cr) notFound();
   const cr = doc.cr;
-  const [emailDefaults, emailLogs] = await Promise.all([buildEmailDefaults(id), listEmailLogsForDocument(id)]);
+  const [emailDefaults, emailLogs, settings] = await Promise.all([buildEmailDefaults(id), listEmailLogsForDocument(id), getCompanySettings()]);
 
   const linked = cr.quotation?.document;
 
@@ -125,6 +127,7 @@ export default async function CrDetailPage({ params }: { params: Promise<{ id: s
             <CardContent className="space-y-3 text-sm">
               <Row label="Issue date" value={fmtDate(doc.issueDate)} />
               <Row label="Delivery / completion" value={fmtDate(cr.deliveryDate)} />
+              {cr.cost > 0 && <Row label="Cost" value={formatMoney(cr.cost, settings.currency)} />}
               <Row label="Client" value={doc.client.companyName} />
               <div className="border-t border-border pt-3">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted">Linked quotation</p>

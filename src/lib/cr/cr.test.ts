@@ -21,6 +21,7 @@ const base = (overrides: Partial<CrInput> = {}): CrInput => ({
   deliveryDate: "2026-06-20",
   customerRequirements: "Work outside 9-5 is not allowed.",
   remarks: "",
+  cost: "",
   approvalName: "Nimal Fernando",
   approvalDate: "2026-06-02",
   customerSignature: PNG,
@@ -150,6 +151,8 @@ describe("CR printed layout", () => {
         issueDate: "2026-06-01",
         deliveryDate: "2026-06-20",
         quotationReference: "QT-2026-0004",
+        cost: 125000,
+        currency: "LKR",
         client: {
           companyName: "Alpha Ltd",
           clientCode: "CL-0001",

@@ -204,6 +204,7 @@ model CRDocument {
   deliveryDate         DateTime?
   customerRequirements String?
   remarks              String?
+  cost                 Int      @default(0) // minor units (total development cost)
   approvalName         String?
   approvalDate         DateTime?
   customerSignature    String?  // data URL from signature pad

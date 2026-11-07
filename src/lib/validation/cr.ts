@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseMoney } from "@/lib/money";
 import { CR_STATUSES } from "@/lib/constants";
 
 const isoDate = z
@@ -46,6 +47,18 @@ export const crSchema = z.object({
   deliveryDate: optionalDate,
   customerRequirements: optionalText(4000, "Customer requirements"),
   remarks: optionalText(2000, "Remarks"),
+  cost: z
+    .string()
+    .trim()
+    .transform((v, ctx) => {
+      if (v === "") return 0;
+      const minor = parseMoney(v);
+      if (minor === null) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Cost must be an amount such as 1250 or 1250.50." });
+        return z.NEVER;
+      }
+      return minor;
+    }),
   approvalName: optionalText(120, "Approver name"),
   approvalDate: optionalDate,
   customerSignature: signature,

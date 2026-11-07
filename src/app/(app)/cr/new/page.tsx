@@ -5,6 +5,7 @@ import { requireUser } from "@/lib/auth/session";
 import { listClientsForQuotation } from "@/lib/quotations/queries";
 import { getQuotationDetail } from "@/lib/quotations/queries";
 import { listQuotationOptions } from "@/lib/cr/queries";
+import { getCompanySettings } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "New CR document" };
 
@@ -14,7 +15,7 @@ const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 export default async function NewCrPage({ searchParams }: { searchParams: SearchParams }) {
   await requireUser();
   const sp = await searchParams;
-  const [clients, quotations] = await Promise.all([listClientsForQuotation(), listQuotationOptions()]);
+  const [clients, quotations, settings] = await Promise.all([listClientsForQuotation(), listQuotationOptions(), getCompanySettings()]);
 
   // Opening from a quotation pre-selects its client and fills the request from it.
   const source = sp.quotation ? await getQuotationDetail(sp.quotation) : null;
@@ -33,6 +34,7 @@ export default async function NewCrPage({ searchParams }: { searchParams: Search
         mode="create"
         clients={clients}
         quotations={quotations}
+        currency={settings.currency}
         defaults={{
           clientId,
           quotationId: source ? source.id : "",
@@ -44,6 +46,7 @@ export default async function NewCrPage({ searchParams }: { searchParams: Search
           deliveryDate: "",
           customerRequirements: "",
           remarks: "",
+          cost: "",
           approvalName: "",
           approvalDate: "",
           customerSignature: "",

@@ -38,6 +38,7 @@ export function CrForm({
   quotations,
   defaults,
   documentNumber,
+  currency = "USD",
 }: {
   mode: "create" | "edit";
   id?: string;
@@ -45,6 +46,7 @@ export function CrForm({
   quotations: CrQuotationOption[];
   defaults: CrInput;
   documentNumber?: string;
+  currency?: string;
 }) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
@@ -173,6 +175,9 @@ export function CrForm({
             </Field>
             <Field label="Remarks" htmlFor="remarks" error={err("remarks")}>
               <Textarea id="remarks" rows={2} {...register("remarks")} />
+            </Field>
+            <Field label="Cost (total development cost)" htmlFor="cost" error={err("cost")} hint={`Amount in ${currency}. Shown on the CR PDF.`}>
+              <Input id="cost" inputMode="decimal" className="num" {...register("cost")} />
             </Field>
           </CardContent>
         </Card>

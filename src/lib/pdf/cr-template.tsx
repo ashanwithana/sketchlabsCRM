@@ -1,12 +1,15 @@
 /* eslint-disable @next/next/no-img-element -- print markup is rendered to PDF, not the Next.js app */
 import * as React from "react";
 import { DocumentPage, formatDate, type ClientView, type CompanyView } from "./layout";
+import { formatMoney } from "@/lib/money";
 
 export type CrPdfData = {
   reference: string;
   issueDate: string; // YYYY-MM-DD
   deliveryDate: string | null;
   quotationReference: string | null;
+  cost: number; // minor units
+  currency: string;
   client: ClientView;
   company: CompanyView;
   requestDetails: string;
@@ -39,6 +42,7 @@ export function CrDocument(data: CrPdfData) {
     { label: "Date", value: day(data.issueDate) },
     ...(data.deliveryDate ? [{ label: "Delivery / completion", value: day(data.deliveryDate) }] : []),
     ...(data.quotationReference ? [{ label: "Quotation", value: data.quotationReference }] : []),
+    ...(data.cost > 0 ? [{ label: "Cost", value: formatMoney(data.cost, data.currency) }] : []),
   ];
 
   return (

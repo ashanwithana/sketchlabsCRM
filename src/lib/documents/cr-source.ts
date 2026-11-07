@@ -38,6 +38,7 @@ export async function loadCrSource(documentId: string) {
 
   const quotationRef = cr.quotation?.document.number ?? null;
   const customerSig = cr.customerSignature ?? null;
+  const currency = company.currency;
   const approvalDate = isoDay(cr.approvalDate);
   const deliveryDate = isoDay(cr.deliveryDate);
   const issueDate = isoDay(doc.issueDate) as string;
@@ -71,6 +72,7 @@ export async function loadCrSource(documentId: string) {
     ],
     requestDetails: cr.requestDetails,
     scopeOfWork: cr.scopeOfWork,
+    cost: cr.cost,
     customerRequirements: cr.customerRequirements,
     remarks: cr.remarks,
     approvalName: cr.approvalName,
@@ -112,6 +114,8 @@ export async function loadCrSource(documentId: string) {
     },
     requestDetails: cr.requestDetails,
     scopeOfWork: cr.scopeOfWork,
+    cost: cr.cost,
+    currency,
     customerRequirements: cr.customerRequirements,
     remarks: cr.remarks,
     approvalName: cr.approvalName,
