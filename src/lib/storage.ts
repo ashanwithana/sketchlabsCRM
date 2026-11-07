@@ -55,6 +55,17 @@ export function checkImage(file: { size: number }, bytes: Uint8Array): ImageChec
   return { ok: true, kind };
 }
 
+/** Returns the Cloudflare R2 bucket if running on Cloudflare Workers, otherwise null. */
+async function getCloudflareBucket(): Promise<any | null> {
+  try {
+    const { getCloudflareContext } = await import("@opennextjs/cloudflare");
+    const ctx = await getCloudflareContext({ async: true });
+    return (ctx?.env as Record<string, any>)?.STORAGE_BUCKET ?? null;
+  } catch {
+    return null;
+  }
+}
+
 /** Saves a validated image under `folder` with a random name. Returns the relative path. */
 export async function saveImage(file: File, folder: string): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
@@ -62,6 +73,15 @@ export async function saveImage(file: File, folder: string): Promise<string> {
   if (!check.ok) throw new Error(check.error);
 
   const relative = path.posix.join(folder, `${randomUUID()}.${check.kind}`);
+  const bucket = await getCloudflareBucket();
+
+  if (bucket) {
+    await bucket.put(relative, bytes, {
+      httpMetadata: { contentType: contentTypeFor(relative) },
+    });
+    return relative;
+  }
+
   const full = resolveStoragePath(relative);
   await fs.mkdir(/*turbopackIgnore: true*/ path.dirname(full), { recursive: true });
   await fs.writeFile(/*turbopackIgnore: true*/ full, bytes, { mode: 0o600 });
@@ -70,18 +90,40 @@ export async function saveImage(file: File, folder: string): Promise<string> {
 
 /** Writes bytes to a relative path inside storage, creating folders as needed. */
 export async function writeStoredFile(relative: string, bytes: Buffer): Promise<void> {
+  const bucket = await getCloudflareBucket();
+  if (bucket) {
+    await bucket.put(relative, bytes, {
+      httpMetadata: { contentType: contentTypeFor(relative) },
+    });
+    return;
+  }
+
   const full = resolveStoragePath(relative);
   await fs.mkdir(/*turbopackIgnore: true*/ path.dirname(full), { recursive: true });
   await fs.writeFile(/*turbopackIgnore: true*/ full, bytes, { mode: 0o600 });
 }
 
 export async function readStoredFile(relative: string): Promise<Buffer> {
+  const bucket = await getCloudflareBucket();
+  if (bucket) {
+    const obj = await bucket.get(relative);
+    if (!obj) throw new Error(`File not found in storage: ${relative}`);
+    const arrayBuffer = await obj.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+  }
+
   return fs.readFile(/*turbopackIgnore: true*/ resolveStoragePath(relative));
 }
 
 /** Removes a stored file. A missing file is not an error. */
 export async function deleteStoredFile(relative: string | null | undefined) {
   if (!relative) return;
+  const bucket = await getCloudflareBucket();
+  if (bucket) {
+    await bucket.delete(relative);
+    return;
+  }
+
   try {
     await fs.unlink(/*turbopackIgnore: true*/ resolveStoragePath(relative));
   } catch (err) {

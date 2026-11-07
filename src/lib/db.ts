@@ -1,19 +1,28 @@
 import { PrismaClient } from "@prisma/client";
-
-// Debug: Log env vars when db module loads
-console.log("🔍 DB.ts loading - NODE_ENV:", process.env.NODE_ENV);
-console.log("🔍 DATABASE_URL present:", !!process.env.DATABASE_URL);
-if (process.env.DATABASE_URL) {
-  console.log("🔍 DATABASE_URL preview:", process.env.DATABASE_URL.substring(0, 50) + "...");
-}
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 
 // One Prisma client per process. Reusing it avoids exhausting connections during hot reload.
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
-export const db =
-  globalForPrisma.prisma ??
-  new PrismaClient({
+function createPrismaClient(): PrismaClient {
+  const connectionString = process.env.DATABASE_URL;
+
+  // When connecting to Postgres (Cloudflare Workers or local Postgres), use the driver adapter
+  if (connectionString?.startsWith("postgres://") || connectionString?.startsWith("postgresql://")) {
+    const pool = new Pool({ connectionString });
+    const adapter = new PrismaPg(pool);
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
+    });
+  }
+
+  return new PrismaClient({
     log: process.env.NODE_ENV === "development" ? ["warn", "error"] : ["error"],
   });
+}
+
+export const db = globalForPrisma.prisma ?? createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = db;

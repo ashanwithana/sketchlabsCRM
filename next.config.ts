@@ -12,8 +12,15 @@ const nextConfig: NextConfig = {
       },
     },
   },
-  // Puppeteer runs Chrome as a child process and must not be bundled.
-  serverExternalPackages: ["puppeteer", "puppeteer-core", "nodemailer"],
+  // External packages for Cloudflare Workers / Node runtime
+  serverExternalPackages: [
+    "@prisma/client",
+    ".prisma/client",
+    "pg",
+    "puppeteer",
+    "puppeteer-core",
+    "nodemailer",
+  ],
 };
 
 export default nextConfig;

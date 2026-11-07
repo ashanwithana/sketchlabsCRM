@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
+    "build:cf": "prisma generate && opennextjs-cloudflare build",
+    "preview:cf": "opennextjs-cloudflare preview",
+    "deploy:cf": "opennextjs-cloudflare deploy",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
@@ -22,6 +25,8 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.0",
+    "@opennextjs/cloudflare": "^1.20.16",
+    "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^6.19.3",
     "@radix-ui/react-slot": "^1.5.0",
     "bcryptjs": "^3.0.3",
@@ -29,8 +34,9 @@
     "clsx": "^2.1.1",
     "jose": "^6.2.14",
     "lucide-react": "^1.66.0",
-    "next": "16.4.3",
+    "next": "^16.4.5",
     "nodemailer": "^7.0.13",
+    "pg": "^8.23.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-hook-form": "^7.91.0",
@@ -43,16 +49,18 @@
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",
     "@types/nodemailer": "^7.0.12",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^18.0.9",
     "eslint": "^9",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "^16.4.5",
     "prisma": "^6.19.3",
     "puppeteer": "^24.43.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^3.2.7"
+    "vitest": "^3.2.7",
+    "wrangler": "^4.158.0"
   }
 }
