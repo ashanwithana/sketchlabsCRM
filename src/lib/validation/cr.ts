@@ -20,19 +20,8 @@ const optionalText = (max: number, label: string) =>
     .max(max, `${label} must be under ${max} characters.`)
     .transform((v) => (v === "" ? null : v));
 
-// Drawn signatures arrive as PNG data URLs from the signature pad.
-const MAX_SIGNATURE_CHARS = 400_000;
-const signature = z
-  .string()
-  .transform((v) => (v === "" ? null : v))
-  .refine(
-    (v) => v === null || (v.startsWith("data:image/png;base64,") && v.length <= MAX_SIGNATURE_CHARS),
-    "The signature could not be read. Draw it again.",
-  );
-
 export const crSchema = z.object({
   clientId: z.string().min(1, "Choose a client."),
-  quotationId: z.string().trim().transform((v) => (v === "" ? null : v)),
   issueDate: isoDate,
   requestDetails: z
     .string()
@@ -59,9 +48,6 @@ export const crSchema = z.object({
       }
       return minor;
     }),
-  approvalName: optionalText(120, "Approver name"),
-  approvalDate: optionalDate,
-  customerSignature: signature,
 });
 
 export type CrInput = z.input<typeof crSchema>;

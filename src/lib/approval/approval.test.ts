@@ -13,6 +13,7 @@ const make = async (validUntil: string) =>
     await createQuotation(
       quotationSchema.parse({
         clientId,
+        crId: "",
         issueDate: "2026-06-01",
         validUntil,
         terms: "Terms for the client",

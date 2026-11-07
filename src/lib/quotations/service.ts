@@ -19,6 +19,7 @@ type StoredItem = {
 
 type QuotationData = {
   clientId: string;
+  crId: string | null;
   issueDate: Date;
   validUntil: Date;
   terms: string | null;
@@ -53,6 +54,7 @@ async function writeQuotation(tx: Prisma.TransactionClient, number: string, data
       issueDate: data.issueDate,
       quotation: {
         create: {
+          crId: data.crId,
           validUntil: data.validUntil,
           subtotal: totals.subtotal,
           discountTotal: totals.discountTotal,
@@ -92,6 +94,7 @@ async function assertActiveClient(clientId: string) {
 function fromInput(input: QuotationValues): QuotationData {
   return {
     clientId: input.clientId,
+    crId: input.crId,
     issueDate: issueDateFrom(input.issueDate),
     validUntil: expiryDateFrom(input.validUntil),
     terms: input.terms,
@@ -183,6 +186,7 @@ export async function duplicateQuotation(id: string, actor: string, validDays: n
   const expiryIso = addDays(issue, validDays).toISOString().slice(0, 10);
   const data: QuotationData = {
     clientId: source.clientId,
+    crId: source.quotation.crId,
     issueDate: issue,
     validUntil: expiryDateFrom(expiryIso),
     terms: source.quotation.terms,

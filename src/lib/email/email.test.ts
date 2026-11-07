@@ -152,6 +152,7 @@ describeIfChrome("document email with PDF attachment (requires Chrome)", () => {
     const created = await createQuotation(
       quotationSchema.parse({
         clientId: client.id,
+        crId: "",
         issueDate: "2026-05-01",
         validUntil: "2026-05-31",
         terms: "",

@@ -49,6 +49,7 @@ export const quotationLineSchema = z.object({
 export const quotationSchema = z
   .object({
     clientId: z.string().min(1, "Choose a client."),
+    crId: z.string().trim().transform((v) => (v === "" ? null : v)),
     issueDate: isoDate,
     validUntil: isoDate,
     terms: z.string().trim().max(4000, "Keep terms under 4000 characters.").transform((v) => (v === "" ? null : v)),

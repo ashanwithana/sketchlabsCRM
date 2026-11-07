@@ -8,6 +8,7 @@ let clientId = "";
 
 const baseInput = (overrides: Partial<QuotationInput> = {}): QuotationInput => ({
   clientId,
+  crId: "",
   issueDate: "2026-03-01",
   validUntil: "2026-03-31",
   terms: "50% advance",

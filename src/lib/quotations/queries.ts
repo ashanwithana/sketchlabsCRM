@@ -69,7 +69,7 @@ export async function getQuotationDetail(id: string, now: Date = new Date()) {
     where: { id, type: "QUOTATION" },
     include: {
       client: true,
-      quotation: { include: { items: { orderBy: { position: "asc" } } } },
+      quotation: { include: { items: { orderBy: { position: "asc" } }, cr: { include: { document: { select: { id: true, number: true, status: true } } } } } },
     },
   });
   if (!doc?.quotation) return null;

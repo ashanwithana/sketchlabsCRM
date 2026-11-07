@@ -173,7 +173,10 @@ model Quotation {
   updatedAt     DateTime @updatedAt
 
   items QuotationItem[]
-  crs   CRDocument[]
+  cr    CRDocument? @relation(fields: [crId], references: [id])
+  crId  String?
+
+  @@index([crId])
 }
 
 model QuotationItem {
@@ -197,21 +200,18 @@ model CRDocument {
   id                   String   @id @default(cuid())
   documentId           String   @unique
   document             Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  quotationId          String?
-  quotation            Quotation? @relation(fields: [quotationId], references: [id])
   requestDetails       String
   scopeOfWork          String
   deliveryDate         DateTime?
   customerRequirements String?
   remarks              String?
   cost                 Int      @default(0) // minor units (total development cost)
-  approvalName         String?
-  approvalDate         DateTime?
-  customerSignature    String?  // data URL from signature pad
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
-  @@index([quotationId])
+  quotations Quotation[]
+
+  @@index([documentId])
 }
 
 model MaintenanceRecord {

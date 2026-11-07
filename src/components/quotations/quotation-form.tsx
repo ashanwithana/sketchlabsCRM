@@ -24,10 +24,18 @@ export type ClientOption = {
   billingAddress: string;
 };
 
+export type CrOption = {
+  id: string;
+  number: string;
+  clientId: string;
+  status: string;
+};
+
 type Props = {
   mode: "create" | "edit";
   id?: string;
   clients: ClientOption[];
+  crs?: CrOption[];
   defaults: QuotationInput;
   currency: string;
   defaultTaxRate: string; // percent as typed, e.g. "15"
@@ -40,7 +48,7 @@ function lenientQty(v: string) {
   return /^\d{1,6}$/.test(v.trim()) ? Number(v.trim()) : 0;
 }
 
-export function QuotationForm({ mode, id, clients, defaults, currency, defaultTaxRate, documentNumber }: Props) {
+export function QuotationForm({ mode, id, clients, crs = [], defaults, currency, defaultTaxRate, documentNumber }: Props) {
   const router = useRouter();
   const [serverError, setServerError] = React.useState<string | null>(null);
 
@@ -62,6 +70,7 @@ export function QuotationForm({ mode, id, clients, defaults, currency, defaultTa
   const clientId = useWatch({ control, name: "clientId" });
   const items = useWatch({ control, name: "items" });
   const selectedClient = clients.find((c) => c.id === clientId);
+  const clientCrs = crs.filter((c) => c.clientId === clientId);
 
   // Live totals use the same arithmetic as the server. Invalid partial input counts as zero.
   const totals = React.useMemo(
@@ -116,6 +125,15 @@ export function QuotationForm({ mode, id, clients, defaults, currency, defaultTa
                   <option key={c.id} value={c.id}>
                     {c.companyName} ({c.clientCode})
                   </option>
+                ))}
+              </Select>
+            </Field>
+
+            <Field label="Linked CR (optional)" htmlFor="crId" hint={clientId ? "Approved customer requests for this client." : "Choose a client first."}>
+              <Select id="crId" disabled={!clientId} {...register("crId")}>
+                <option value="">No linked CR</option>
+                {clientCrs.map((c) => (
+                  <option key={c.id} value={c.id}>{c.number} · {c.status.toLowerCase()}</option>
                 ))}
               </Select>
             </Field>

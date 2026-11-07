@@ -5,6 +5,7 @@ import { QuotationForm } from "@/components/quotations/quotation-form";
 import { requireUser } from "@/lib/auth/session";
 import { getCompanySettings } from "@/lib/settings";
 import { getQuotationDetail, listClientsForQuotation } from "@/lib/quotations/queries";
+import { listCrOptions } from "@/lib/cr/queries";
 import { toDecimalString } from "@/lib/money";
 
 export const metadata: Metadata = { title: "Edit quotation" };
@@ -16,7 +17,7 @@ const pct = (bp: number) => (bp === 0 ? "" : toDecimalString(bp).replace(/\.00$/
 export default async function EditQuotationPage({ params }: { params: Promise<{ id: string }> }) {
   await requireUser();
   const { id } = await params;
-  const [doc, clients, settings] = await Promise.all([getQuotationDetail(id), listClientsForQuotation(), getCompanySettings()]);
+  const [doc, clients, crs, settings] = await Promise.all([getQuotationDetail(id), listClientsForQuotation(), listCrOptions(), getCompanySettings()]);
   if (!doc?.quotation) notFound();
 
   return (
@@ -27,10 +28,12 @@ export default async function EditQuotationPage({ params }: { params: Promise<{ 
         id={id}
         documentNumber={doc.number}
         clients={clients}
+        crs={crs}
         currency={doc.quotation.currency}
         defaultTaxRate={pct(settings.defaultTaxRateBp)}
         defaults={{
           clientId: doc.clientId,
+          crId: doc.quotation.crId ?? "",
           issueDate: isoDay(doc.issueDate),
           validUntil: isoDay(doc.quotation.validUntil),
           terms: doc.quotation.terms ?? "",

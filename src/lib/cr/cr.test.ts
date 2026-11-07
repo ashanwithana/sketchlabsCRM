@@ -3,18 +3,16 @@ import { ensurePdfRevision } from "@/lib/documents/pdf-revisions";
 import { closeBrowser, pdfEngineAvailable } from "@/lib/pdf/browser";
 import { db } from "@/lib/db";
 import { nextNumber } from "@/lib/numbering";
-import { createQuotation } from "@/lib/quotations/service";
-import { quotationSchema } from "@/lib/validation/quotation";
+
 import { crSchema, type CrInput } from "@/lib/validation/cr";
 import { createCr, CrError, duplicateCr, setCrStatus, updateCr } from "./service";
 import { renderHtml } from "@/lib/pdf/render";
 import { CrDocument } from "@/lib/pdf/cr-template";
 
-const PNG = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
 
 const base = (overrides: Partial<CrInput> = {}): CrInput => ({
   clientId: "",
-  quotationId: "",
   issueDate: "2026-06-01",
   requestDetails: "Customer asks for a quarterly inspection of the chiller plant.",
   scopeOfWork: "Inspect compressors, replace filters, and log readings for the report.",
@@ -22,9 +20,6 @@ const base = (overrides: Partial<CrInput> = {}): CrInput => ({
   customerRequirements: "Work outside 9-5 is not allowed.",
   remarks: "",
   cost: "",
-  approvalName: "Nimal Fernando",
-  approvalDate: "2026-06-02",
-  customerSignature: PNG,
   ...overrides,
 });
 
@@ -32,19 +27,12 @@ describe("CR validation", () => {
   it("accepts a complete request and turns blanks into null", () => {
     const v = crSchema.parse({ ...base({ clientId: "c1" }), remarks: "  " });
     expect(v.remarks).toBeNull();
-    expect(v.quotationId).toBeNull();
-    expect(v.customerSignature).toBe(PNG);
+    expect(v.cost).toBe(0);
   });
 
   it("requires a meaningful request and scope", () => {
     expect(crSchema.safeParse({ ...base({ clientId: "c1" }), requestDetails: "short" }).success).toBe(false);
     expect(crSchema.safeParse({ ...base({ clientId: "c1" }), scopeOfWork: "tbd" }).success).toBe(false);
-  });
-
-  it("accepts only PNG signature data and rejects anything else", () => {
-    expect(crSchema.safeParse({ ...base({ clientId: "c1" }), customerSignature: "data:text/html;base64,PHNjcmlwdD4=" }).success).toBe(false);
-    expect(crSchema.safeParse({ ...base({ clientId: "c1" }), customerSignature: "https://evil.example/x.png" }).success).toBe(false);
-    expect(crSchema.safeParse({ ...base({ clientId: "c1" }), customerSignature: "data:image/png;base64," + "A".repeat(400_001) }).success).toBe(false);
   });
 
   it("rejects a delivery date that is not a real date", () => {
@@ -54,14 +42,10 @@ describe("CR validation", () => {
 
 describe("CR service (database)", () => {
   let clientA = "";
-  let clientB = "";
-  let quotationDocA = "";
-  let quotationDocB = "";
 
   beforeAll(async () => {
     await db.document.deleteMany();
     await db.sequence.deleteMany({ where: { key: { startsWith: "CR" } } });
-    await db.sequence.deleteMany({ where: { key: { startsWith: "QT-" } } });
     await db.client.deleteMany();
 
     const mk = async (name: string) => {
@@ -80,22 +64,6 @@ describe("CR service (database)", () => {
       return c.id;
     };
     clientA = await mk("Alpha Ltd");
-    clientB = await mk("Beta Ltd");
-
-    const quote = (clientId: string) =>
-      createQuotation(
-        quotationSchema.parse({
-          clientId,
-          issueDate: "2026-06-01",
-          validUntil: "2026-06-30",
-          terms: "",
-          notes: "",
-          items: [{ description: "Chiller service", quantity: "1", unitPrice: "100", discount: "", taxRate: "0" }],
-        }),
-        "Tester",
-      );
-    quotationDocA = (await quote(clientA)).id;
-    quotationDocB = (await quote(clientB)).id;
   });
 
   beforeEach(async () => {
@@ -103,37 +71,28 @@ describe("CR service (database)", () => {
     await db.sequence.deleteMany({ where: { key: { startsWith: "CR-" } } });
   });
 
-  it("creates a CR with the next CR number and links the quotation of the same client", async () => {
-    const created = await createCr(crSchema.parse({ ...base({ clientId: clientA, quotationId: quotationDocA }) }), "Tester");
+  it("creates a CR with the next CR number", async () => {
+    const created = await createCr(crSchema.parse({ ...base({ clientId: clientA }) }), "Tester");
     expect(created.number).toMatch(/^CR-\d{4}-0001$/);
-    const cr = await db.cRDocument.findFirstOrThrow({ where: { document: { id: created.id } }, include: { quotation: true } });
-    expect(cr.quotation).not.toBeNull();
+    const cr = await db.cRDocument.findFirstOrThrow({ where: { document: { id: created.id } } });
     expect(cr.requestDetails).toContain("chiller");
   });
 
-  it("refuses to link a quotation that belongs to another client", async () => {
-    await expect(
-      createCr(crSchema.parse({ ...base({ clientId: clientA, quotationId: quotationDocB }) }), "Tester"),
-    ).rejects.toBeInstanceOf(CrError);
-  });
-
-  it("updates request details and can clear the link", async () => {
-    const created = await createCr(crSchema.parse({ ...base({ clientId: clientA, quotationId: quotationDocA }) }), "Tester");
-    await updateCr(created.id, crSchema.parse({ ...base({ clientId: clientA, quotationId: "", scopeOfWork: "Replace the condenser fans and test them." }) }), "Tester");
+  it("updates request details and cost", async () => {
+    const created = await createCr(crSchema.parse({ ...base({ clientId: clientA }) }), "Tester");
+    await updateCr(created.id, crSchema.parse({ ...base({ clientId: clientA, cost: "250", scopeOfWork: "Replace the condenser fans and test them." }) }), "Tester");
     const cr = await db.cRDocument.findFirstOrThrow({ where: { document: { id: created.id } } });
-    expect(cr.quotationId).toBeNull();
+    expect(cr.cost).toBe(25000);
     expect(cr.scopeOfWork).toContain("condenser");
   });
 
-  it("duplicates into a new draft without copying the approval or signature", async () => {
+  it("duplicates into a new draft", async () => {
     const created = await createCr(crSchema.parse({ ...base({ clientId: clientA }) }), "Tester");
     await setCrStatus(created.id, "APPROVED", "Tester");
     const copy = await duplicateCr(created.id, "Tester");
     expect(copy.number).not.toBe(created.number);
     const doc = await db.document.findUniqueOrThrow({ where: { id: copy.id }, include: { cr: true } });
     expect(doc.status).toBe("DRAFT");
-    expect(doc.cr?.customerSignature).toBeNull();
-    expect(doc.cr?.approvalName).toBeNull();
     expect(doc.cr?.requestDetails).toContain("chiller");
   });
 
@@ -144,13 +103,12 @@ describe("CR service (database)", () => {
 });
 
 describe("CR printed layout", () => {
-  it("prints the approval block with the signature and the linked quotation", async () => {
+  it("prints the request, scope, and cost", async () => {
     const html = await renderHtml(
       CrDocument({
         reference: "CR-2026-0009",
         issueDate: "2026-06-01",
         deliveryDate: "2026-06-20",
-        quotationReference: "QT-2026-0004",
         cost: 125000,
         currency: "LKR",
         client: {
@@ -181,9 +139,6 @@ describe("CR printed layout", () => {
         scopeOfWork: "Scope text",
         customerRequirements: null,
         remarks: null,
-        approvalName: "Nimal Fernando",
-        approvalDate: "2026-06-02",
-        customerSignatureSrc: PNG,
         logoSrc: null,
         signatureSrc: null,
         terms: "CR terms here",
@@ -191,10 +146,7 @@ describe("CR printed layout", () => {
     );
     expect(html).toContain("CUSTOMER REQUEST");
     expect(html).toContain("CR-2026-0009");
-    expect(html).toContain("QT-2026-0004");
-    expect(html).toContain("Customer approval");
-    expect(html).toContain(`src="${PNG}"`);
-    expect(html).toContain("Signature of Nimal Fernando");
+    expect(html).toContain("Request text");
     expect(html).not.toMatch(/https?:\/\//);
   });
 });

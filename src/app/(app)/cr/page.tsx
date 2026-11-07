@@ -8,6 +8,7 @@ import { Input, Select } from "@/components/ui/form-controls";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { requireUser } from "@/lib/auth/session";
 import { listCrs } from "@/lib/cr/queries";
+import { formatMoney } from "@/lib/money";
 import { CR_STATUSES } from "@/lib/constants";
 
 export const metadata: Metadata = { title: "CR documents" };
@@ -75,7 +76,7 @@ export default async function CrListPage({ searchParams }: { searchParams: Searc
                   <tr>
                     <th className="px-5 py-3 font-medium">Number</th>
                     <th className="px-5 py-3 font-medium">Client</th>
-                    <th className="px-5 py-3 font-medium">Quotation</th>
+                    <th className="px-5 py-3 font-medium">Cost</th>
                     <th className="px-5 py-3 font-medium">Issued</th>
                     <th className="px-5 py-3 font-medium">Status</th>
                   </tr>
@@ -90,7 +91,7 @@ export default async function CrListPage({ searchParams }: { searchParams: Searc
                         <span className="text-foreground">{r.client.companyName}</span>
                         <div className="num text-xs text-muted">{r.client.clientCode}</div>
                       </td>
-                      <td className="num px-5 py-3.5 text-muted">{r.quotationNumber ?? "—"}</td>
+                      <td className="num px-5 py-3.5 text-muted">{r.cost > 0 ? formatMoney(r.cost, "USD") : "—"}</td>
                       <td className="num whitespace-nowrap px-5 py-3.5 text-muted">{r.issueDate.toLocaleDateString("en-GB")}</td>
                       <td className="px-5 py-3.5"><StatusBadge status={r.status} /></td>
                     </tr>

@@ -20,6 +20,7 @@ describeIfChrome("PDF revisions (requires Chrome)", () => {
   let documentId = "";
   const input = (qty: string): QuotationInput => ({
     clientId: "",
+    crId: "",
     issueDate: "2026-04-01",
     validUntil: "2026-04-30",
     terms: "Terms",

@@ -21,7 +21,7 @@ export async function listCrs(params: { q?: string; status?: string; page?: numb
       take: PAGE_SIZE,
       include: {
         client: { select: { companyName: true, clientCode: true } },
-        cr: { select: { quotation: { select: { document: { select: { number: true } } } } } },
+        cr: { select: { cost: true } },
       },
     }),
   ]);
@@ -36,7 +36,7 @@ export async function listCrs(params: { q?: string; status?: string; page?: numb
       status: r.status,
       issueDate: r.issueDate,
       client: r.client,
-      quotationNumber: r.cr?.quotation?.document.number ?? null,
+      cost: r.cr?.cost ?? 0,
     })),
   };
 }
@@ -46,7 +46,7 @@ export async function getCrDetail(id: string) {
     where: { id, type: "CR" },
     include: {
       client: true,
-      cr: { include: { quotation: { include: { document: { select: { id: true, number: true, status: true } } } } } },
+      cr: { include: { quotations: { include: { document: { select: { id: true, number: true, status: true } } } } } },
     },
   });
   if (!doc?.cr) return null;
@@ -54,6 +54,22 @@ export async function getCrDetail(id: string) {
 }
 
 /** Quotations for the link picker. Each carries a short scope summary used to pre-fill the CR. */
+/** Approved CRs for the link picker (one CR can have many quotations). */
+export async function listCrOptions() {
+  const docs = await db.document.findMany({
+    where: { type: "CR", status: "APPROVED" },
+    orderBy: { issueDate: "desc" },
+    take: 300,
+    include: { cr: { select: { cost: true } } },
+  });
+  return docs.map((d) => ({
+    id: d.id,
+    number: d.number,
+    clientId: d.clientId,
+    status: d.status,
+  }));
+}
+
 export async function listQuotationOptions() {
   const docs = await db.document.findMany({
     where: { type: "QUOTATION" },

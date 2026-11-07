@@ -56,10 +56,10 @@ describe("repository listing (database)", () => {
     const beta = await mk("Repo Beta");
     const line = [{ description: "Work", quantity: "1", unitPrice: "100", discount: "", taxRate: "0" }];
     alphaDoc = (
-      await createQuotation(quotationSchema.parse({ clientId: alpha, issueDate: "2026-03-01", validUntil: "2026-12-31", terms: "", notes: "", items: line }), "Tester")
+      await createQuotation(quotationSchema.parse({ clientId: alpha, issueDate: "2026-03-01", crId: "", validUntil: "2026-12-31", terms: "", notes: "", items: line }), "Tester")
     ).id;
     betaDoc = (
-      await createQuotation(quotationSchema.parse({ clientId: beta, issueDate: "2026-04-15", validUntil: "2026-05-01", terms: "", notes: "", items: line }), "Tester")
+      await createQuotation(quotationSchema.parse({ clientId: beta, issueDate: "2026-04-15", crId: "", validUntil: "2026-05-01", terms: "", notes: "", items: line }), "Tester")
     ).id;
   });
 

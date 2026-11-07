@@ -11,7 +11,7 @@ import { requireUser } from "@/lib/auth/session";
 import { getQuotationDetail } from "@/lib/quotations/queries";
 import { formatMoney } from "@/lib/money";
 import { buildEmailDefaults } from "@/lib/email/send";
-import { db } from "@/lib/db";
+
 import { listEmailLogsForDocument } from "@/lib/email/queries";
 import { SendEmailDialog } from "@/components/email/send-email-dialog";
 import { RetryEmailButton } from "@/components/email/email-controls";
@@ -27,15 +27,11 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
   if (!doc?.quotation) notFound();
 
   const q = doc.quotation;
-  const [emailDefaults, emailLogs, linkedCrs] = await Promise.all([
+  const [emailDefaults, emailLogs] = await Promise.all([
     buildEmailDefaults(id),
     listEmailLogsForDocument(id),
-    db.cRDocument.findMany({
-      where: { quotationId: q.id },
-      orderBy: { createdAt: "desc" },
-      include: { document: { select: { id: true, number: true, status: true } } },
-    }),
   ]);
+  const linkedCr = q.cr ?? null;
   const money = (minor: number) => formatMoney(minor, q.currency);
 
   return (
@@ -197,16 +193,14 @@ export default async function QuotationDetailPage({ params }: { params: Promise<
           <CardHeader>
             <CardTitle>Linked CR documents</CardTitle>
           </CardHeader>
-          {linkedCrs.length === 0 ? (
-            <p className="px-5 py-6 text-sm text-muted">No customer request has been raised for this quotation yet.</p>
+          {!linkedCr ? (
+            <p className="px-5 py-6 text-sm text-muted">No customer request has been linked to this quotation.</p>
           ) : (
             <ul className="divide-y divide-border">
-              {linkedCrs.map((cr) => (
-                <li key={cr.id} className="flex items-center justify-between px-5 py-3">
-                  <Link href={`/cr/${cr.document.id}`} className="num font-medium text-primary hover:underline">{cr.document.number}</Link>
-                  <StatusBadge status={cr.document.status} />
-                </li>
-              ))}
+              <li className="flex items-center justify-between px-5 py-3">
+                <Link href={`/cr/${linkedCr.document.id}`} className="num font-medium text-primary hover:underline">{linkedCr.document.number}</Link>
+                <StatusBadge status={linkedCr.document.status} />
+              </li>
             </ul>
           )}
         </Card>

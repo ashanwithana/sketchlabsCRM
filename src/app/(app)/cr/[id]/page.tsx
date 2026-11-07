@@ -29,7 +29,7 @@ export default async function CrDetailPage({ params }: { params: Promise<{ id: s
   const cr = doc.cr;
   const [emailDefaults, emailLogs, settings] = await Promise.all([buildEmailDefaults(id), listEmailLogsForDocument(id), getCompanySettings()]);
 
-  const linked = cr.quotation?.document;
+  const relatedQuotations = cr.quotations ?? [];
 
   return (
     <>
@@ -82,28 +82,7 @@ export default async function CrDetailPage({ params }: { params: Promise<{ id: s
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Customer approval</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-2">
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted">Approved by</p>
-                <p className="mt-1 text-sm text-foreground">{cr.approvalName ?? "Not yet approved"}</p>
-                <p className="mt-1 text-xs text-muted">Date: {fmtDate(cr.approvalDate)}</p>
-              </div>
-              <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-muted">Customer signature</p>
-                {cr.customerSignature ? (
-                  // The signature is a data URL stored with the record. It is not a remote resource.
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={cr.customerSignature} alt="Customer signature" className="mt-2 h-24 rounded-lg border border-border bg-surface object-contain" />
-                ) : (
-                  <p className="mt-1 text-sm text-muted">No signature recorded.</p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+
 
           <Card id="pdf-preview" className="overflow-hidden scroll-mt-6">
             <CardHeader>
@@ -130,13 +109,20 @@ export default async function CrDetailPage({ params }: { params: Promise<{ id: s
               {cr.cost > 0 && <Row label="Cost" value={formatMoney(cr.cost, settings.currency)} />}
               <Row label="Client" value={doc.client.companyName} />
               <div className="border-t border-border pt-3">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted">Linked quotation</p>
-                {linked ? (
-                  <Link href={`/quotations/${linked.id}`} className="mt-1 inline-block num font-medium text-primary hover:underline">
-                    {linked.number}
-                  </Link>
+                <p className="text-xs font-medium uppercase tracking-wide text-muted">Related quotations</p>
+                {relatedQuotations.length === 0 ? (
+                  <p className="mt-1 text-muted">None yet. Create a quotation linked to this CR once it is approved.</p>
                 ) : (
-                  <p className="mt-1 text-muted">None</p>
+                  <ul className="mt-1 space-y-1">
+                    {relatedQuotations.map((q) => (
+                      <li key={q.id}>
+                        <Link href={`/quotations/${q.document.id}`} className="num font-medium text-primary hover:underline">
+                          {q.document.number}
+                        </Link>
+                        <span className="ml-2 text-xs text-muted">{q.document.status.toLowerCase()}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             </CardContent>

@@ -24,10 +24,7 @@ async function fileSource(relative: string | null): Promise<{ src: string; sha: 
 export async function loadCrSource(documentId: string) {
   const doc = await db.document.findFirst({
     where: { id: documentId, type: "CR" },
-    include: {
-      client: true,
-      cr: { include: { quotation: { include: { document: { select: { number: true } } } } } },
-    },
+    include: { client: true, cr: true },
   });
   if (!doc?.cr) throw new PdfError("This CR document no longer exists.");
   const cr = doc.cr;
@@ -36,12 +33,9 @@ export async function loadCrSource(documentId: string) {
   const logo = await fileSource(company.logoPath);
   const signature = await fileSource(company.signaturePath);
 
-  const quotationRef = cr.quotation?.document.number ?? null;
-  const customerSig = cr.customerSignature ?? null;
-  const currency = company.currency;
-  const approvalDate = isoDay(cr.approvalDate);
   const deliveryDate = isoDay(cr.deliveryDate);
   const issueDate = isoDay(doc.issueDate) as string;
+  const currency = company.currency;
 
   const snapshot = {
     type: "CR",
@@ -49,7 +43,8 @@ export async function loadCrSource(documentId: string) {
     reference: doc.number,
     issueDate,
     deliveryDate,
-    quotationRef,
+    cost: cr.cost,
+    currency,
     client: [
       doc.client.clientCode,
       doc.client.companyName,
@@ -72,12 +67,8 @@ export async function loadCrSource(documentId: string) {
     ],
     requestDetails: cr.requestDetails,
     scopeOfWork: cr.scopeOfWork,
-    cost: cr.cost,
     customerRequirements: cr.customerRequirements,
     remarks: cr.remarks,
-    approvalName: cr.approvalName,
-    approvalDate,
-    signatureSha: customerSig ? sha256(customerSig) : null,
     logoSha: logo?.sha ?? null,
     companySignatureSha: signature?.sha ?? null,
     terms: company.crTerms,
@@ -87,7 +78,8 @@ export async function loadCrSource(documentId: string) {
     reference: doc.number,
     issueDate,
     deliveryDate,
-    quotationReference: quotationRef,
+    cost: cr.cost,
+    currency,
     client: {
       companyName: doc.client.companyName,
       clientCode: doc.client.clientCode,
@@ -114,13 +106,8 @@ export async function loadCrSource(documentId: string) {
     },
     requestDetails: cr.requestDetails,
     scopeOfWork: cr.scopeOfWork,
-    cost: cr.cost,
-    currency,
     customerRequirements: cr.customerRequirements,
     remarks: cr.remarks,
-    approvalName: cr.approvalName,
-    approvalDate,
-    customerSignatureSrc: customerSig,
     logoSrc: logo?.src ?? null,
     signatureSrc: signature?.src ?? null,
     terms: company.crTerms,
