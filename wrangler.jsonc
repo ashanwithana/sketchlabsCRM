@@ -10,10 +10,10 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "r2_buckets": [
+  "kv_namespaces": [
     {
-      "binding": "STORAGE_BUCKET",
-      "bucket_name": "company-storage"
+      "binding": "STORAGE_KV",
+      "id": "YOUR_KV_NAMESPACE_ID"
     }
   ],
   "triggers": {

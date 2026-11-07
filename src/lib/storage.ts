@@ -55,12 +55,19 @@ export function checkImage(file: { size: number }, bytes: Uint8Array): ImageChec
   return { ok: true, kind };
 }
 
-/** Returns the Cloudflare R2 bucket if running on Cloudflare Workers, otherwise null. */
-async function getCloudflareBucket(): Promise<any | null> {
+/** Returns a Cloudflare storage provider (Workers KV or R2) if running on Cloudflare Workers, otherwise null. */
+async function getCloudflareStorage(): Promise<
+  | { type: "kv"; client: any }
+  | { type: "r2"; client: any }
+  | null
+> {
   try {
     const { getCloudflareContext } = await import("@opennextjs/cloudflare");
     const ctx = await getCloudflareContext({ async: true });
-    return (ctx?.env as Record<string, any>)?.STORAGE_BUCKET ?? null;
+    const env = ctx?.env as Record<string, any>;
+    if (env?.STORAGE_KV) return { type: "kv", client: env.STORAGE_KV };
+    if (env?.STORAGE_BUCKET) return { type: "r2", client: env.STORAGE_BUCKET };
+    return null;
   } catch {
     return null;
   }
@@ -73,12 +80,16 @@ export async function saveImage(file: File, folder: string): Promise<string> {
   if (!check.ok) throw new Error(check.error);
 
   const relative = path.posix.join(folder, `${randomUUID()}.${check.kind}`);
-  const bucket = await getCloudflareBucket();
+  const storage = await getCloudflareStorage();
 
-  if (bucket) {
-    await bucket.put(relative, bytes, {
-      httpMetadata: { contentType: contentTypeFor(relative) },
-    });
+  if (storage) {
+    if (storage.type === "kv") {
+      await storage.client.put(relative, bytes);
+    } else {
+      await storage.client.put(relative, bytes, {
+        httpMetadata: { contentType: contentTypeFor(relative) },
+      });
+    }
     return relative;
   }
 
@@ -90,11 +101,15 @@ export async function saveImage(file: File, folder: string): Promise<string> {
 
 /** Writes bytes to a relative path inside storage, creating folders as needed. */
 export async function writeStoredFile(relative: string, bytes: Buffer): Promise<void> {
-  const bucket = await getCloudflareBucket();
-  if (bucket) {
-    await bucket.put(relative, bytes, {
-      httpMetadata: { contentType: contentTypeFor(relative) },
-    });
+  const storage = await getCloudflareStorage();
+  if (storage) {
+    if (storage.type === "kv") {
+      await storage.client.put(relative, bytes);
+    } else {
+      await storage.client.put(relative, bytes, {
+        httpMetadata: { contentType: contentTypeFor(relative) },
+      });
+    }
     return;
   }
 
@@ -104,12 +119,18 @@ export async function writeStoredFile(relative: string, bytes: Buffer): Promise<
 }
 
 export async function readStoredFile(relative: string): Promise<Buffer> {
-  const bucket = await getCloudflareBucket();
-  if (bucket) {
-    const obj = await bucket.get(relative);
-    if (!obj) throw new Error(`File not found in storage: ${relative}`);
-    const arrayBuffer = await obj.arrayBuffer();
-    return Buffer.from(arrayBuffer);
+  const storage = await getCloudflareStorage();
+  if (storage) {
+    if (storage.type === "kv") {
+      const arrayBuffer = await storage.client.get(relative, { type: "arrayBuffer" });
+      if (!arrayBuffer) throw new Error(`File not found in storage: ${relative}`);
+      return Buffer.from(arrayBuffer);
+    } else {
+      const obj = await storage.client.get(relative);
+      if (!obj) throw new Error(`File not found in storage: ${relative}`);
+      const arrayBuffer = await obj.arrayBuffer();
+      return Buffer.from(arrayBuffer);
+    }
   }
 
   return fs.readFile(/*turbopackIgnore: true*/ resolveStoragePath(relative));
@@ -118,9 +139,9 @@ export async function readStoredFile(relative: string): Promise<Buffer> {
 /** Removes a stored file. A missing file is not an error. */
 export async function deleteStoredFile(relative: string | null | undefined) {
   if (!relative) return;
-  const bucket = await getCloudflareBucket();
-  if (bucket) {
-    await bucket.delete(relative);
+  const storage = await getCloudflareStorage();
+  if (storage) {
+    await storage.client.delete(relative);
     return;
   }
 
