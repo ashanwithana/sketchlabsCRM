@@ -9,9 +9,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// The token in the URL is per request, so this page renders at request time.
-export const instant = false;
-
 const day = (d: Date) => d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", timeZone: "UTC" });
 
 export default async function ApprovePage({ params }: { params: Promise<{ token: string }> }) {

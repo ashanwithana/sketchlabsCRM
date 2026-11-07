@@ -4,8 +4,6 @@ import { LoginForm } from "./login-form";
 
 export const metadata: Metadata = { title: "Sign in" };
 
-export const instant = false;
-
 export default async function LoginPage({
   searchParams,
 }: {
