@@ -53,6 +53,7 @@ export default async function ClientDetailPage({
   const quotations = docsOf("QUOTATION");
   const crs = docsOf("CR");
   const maintenance = docsOf("MAINTENANCE");
+  const activeAgreement = maintenance.find((d) => d.status === "ACTIVE");
   const invoices = docsOf("INVOICE");
 
   // Next scheduled invoice date: last invoiced period + cycle, or the anchor + send day.
@@ -156,7 +157,7 @@ export default async function ClientDetailPage({
             <CardContent className="space-y-3">
               <Stat label="Quotations" value={quotations.length} href={`/clients/${client.id}?tab=quotations`} />
               <Stat label="CR documents" value={crs.length} href={`/clients/${client.id}?tab=cr`} />
-              <Stat label="Maintenance reports" value={maintenance.length} href={`/clients/${client.id}?tab=maintenance`} />
+              <Stat label="Maintenance agreements" value={maintenance.length} href={`/clients/${client.id}?tab=maintenance`} />
               <Stat label="Systems" value={client.equipment.length} href={`/clients/${client.id}?tab=equipment`} />
             </CardContent>
           </Card>
@@ -181,10 +182,10 @@ export default async function ClientDetailPage({
       )}
       {tab === "maintenance" && (
         <DocumentTable
-          title="Maintenance records"
-          empty="No maintenance records for this client yet."
-          hint="Maintenance records are created in the Maintenance module (Task 9)."
-          rows={maintenance.map((d) => ({ id: d.id, number: d.number, status: d.status, date: d.maintenance?.maintenanceDate ?? d.issueDate, amount: null }))}
+          title="Maintenance agreements"
+          empty="No maintenance agreements for this client yet."
+          hint="Create an agreement in the Maintenance module to set up recurring billing."
+          rows={maintenance.map((d) => ({ id: d.id, number: d.number, status: d.status, date: d.maintenance?.validFrom ?? d.issueDate, amount: d.maintenance?.grandTotal ?? null }))}
         />
       )}
 
@@ -199,7 +200,6 @@ export default async function ClientDetailPage({
             location: e.location,
             installedOn: e.installedOn,
             notes: e.notes,
-            _count: e._count,
           }))}
         />
       )}
@@ -215,6 +215,8 @@ export default async function ClientDetailPage({
             nextDue: nextInvoiceDue,
           }}
           services={client.services.map((s) => ({ id: s.id, description: s.description, amount: s.amount, taxRateBp: s.taxRateBp }))}
+          agreementNumber={activeAgreement?.number ?? null}
+          agreementId={activeAgreement?.id ?? null}
           invoices={invoices.map((d) => ({
             id: d.id,
             number: d.number,

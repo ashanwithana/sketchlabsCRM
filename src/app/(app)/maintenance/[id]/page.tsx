@@ -1,4 +1,3 @@
-/* eslint-disable @next/next/no-img-element -- stored signatures are data URLs, not remote images */
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -12,11 +11,12 @@ import { SendEmailDialog } from "@/components/email/send-email-dialog";
 import { RetryEmailButton } from "@/components/email/email-controls";
 import { deliveryLabel } from "@/components/email/email-status";
 import { requireUser } from "@/lib/auth/session";
-import { equipmentServiceHistory, getMaintenanceDetail } from "@/lib/maintenance/queries";
+import { getMaintenanceDetail } from "@/lib/maintenance/queries";
 import { buildEmailDefaults } from "@/lib/email/send";
 import { listEmailLogsForDocument } from "@/lib/email/queries";
+import { formatMoney } from "@/lib/money";
 
-export const metadata: Metadata = { title: "Maintenance record" };
+export const metadata: Metadata = { title: "Maintenance agreement" };
 
 const fmt = (d: Date | null | undefined) => (d ? d.toLocaleDateString("en-GB") : "—");
 
@@ -26,21 +26,20 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
   const doc = await getMaintenanceDetail(id);
   if (!doc?.maintenance) notFound();
   const m = doc.maintenance;
-  const [emailDefaults, emailLogs, history] = await Promise.all([
+  const [emailDefaults, emailLogs] = await Promise.all([
     buildEmailDefaults(id),
     listEmailLogsForDocument(id),
-    m.equipmentId ? equipmentServiceHistory(m.equipmentId, id) : Promise.resolve([]),
   ]);
 
   return (
     <>
       <div className="mb-6">
-        <Link href="/maintenance" className="text-sm text-muted hover:text-foreground">← All maintenance</Link>
+        <Link href="/maintenance" className="text-sm text-muted hover:text-foreground">← All agreements</Link>
       </div>
 
       <PageHeader
         title={doc.number}
-        description={`${doc.client.companyName} · ${m.equipment?.name ?? "System"}`}
+        description={`${doc.client.companyName} · maintenance agreement`}
         actions={
           <Link href={`/maintenance/${id}/edit`} className={buttonVariants({ variant: "secondary" })}>
             <Pencil /> Edit
@@ -70,53 +69,68 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
         <div className="space-y-6 lg:col-span-2">
           <Card>
             <CardHeader>
-              <CardTitle>Service</CardTitle>
+              <CardTitle>Scope</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <Block label="Description" text={m.description} />
-              {m.workPerformed && <Block label="Work performed" text={m.workPerformed} />}
-              {m.recommendations && <Block label="Recommendations" text={m.recommendations} />}
-              {m.customerRemarks && <Block label="Customer remarks" text={m.customerRemarks} />}
+            <CardContent>
+              <p className="whitespace-pre-line text-sm text-foreground">{m.description}</p>
             </CardContent>
           </Card>
 
           <Card className="overflow-hidden">
             <CardHeader>
-              <CardTitle>Parts replaced</CardTitle>
+              <CardTitle>Services</CardTitle>
             </CardHeader>
-            {m.parts.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-muted">No parts were replaced.</p>
-            ) : (
-              <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase tracking-wide text-muted">
-                  <tr>
-                    <th className="px-5 py-3 font-medium">Part</th>
-                    <th className="px-5 py-3 text-right font-medium">Qty</th>
-                    <th className="px-5 py-3 font-medium">Notes</th>
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-muted/60 text-xs uppercase tracking-wide text-muted">
+                <tr>
+                  <th className="px-5 py-3 font-medium">Service</th>
+                  <th className="px-5 py-3 text-right font-medium">Qty</th>
+                  <th className="px-5 py-3 text-right font-medium">Unit price</th>
+                  <th className="px-5 py-3 text-right font-medium">Tax</th>
+                  <th className="px-5 py-3 text-right font-medium">Total</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {m.items.map((i) => (
+                  <tr key={i.id}>
+                    <td className="px-5 py-3">{i.description}</td>
+                    <td className="num px-5 py-3 text-right">{i.quantity}</td>
+                    <td className="num px-5 py-3 text-right">{formatMoney(i.unitPrice, m.currency)}</td>
+                    <td className="num px-5 py-3 text-right">{(i.taxRateBp / 100).toFixed(2)}%</td>
+                    <td className="num px-5 py-3 text-right font-medium">{formatMoney(i.lineTotal, m.currency)}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {m.parts.map((p) => (
-                    <tr key={p.id}>
-                      <td className="px-5 py-3">{p.name}</td>
-                      <td className="num px-5 py-3 text-right">{p.quantity}</td>
-                      <td className="px-5 py-3 text-muted">{p.notes ?? ""}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                ))}
+              </tbody>
+              <tfoot className="border-t border-border bg-surface-muted/40 text-sm">
+                <tr>
+                  <td colSpan={4} className="px-5 py-2 text-right text-muted">Subtotal</td>
+                  <td className="num px-5 py-2 text-right">{formatMoney(m.subtotal, m.currency)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="px-5 py-2 text-right text-muted">Tax</td>
+                  <td className="num px-5 py-2 text-right">{formatMoney(m.taxTotal, m.currency)}</td>
+                </tr>
+                <tr>
+                  <td colSpan={4} className="px-5 py-2 text-right font-semibold">Grand total</td>
+                  <td className="num px-5 py-2 text-right font-semibold">{formatMoney(m.grandTotal, m.currency)}</td>
+                </tr>
+              </tfoot>
+            </table>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Technician and customer</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-2">
-              <SigBox title={`Technician${m.technicianName ? `: ${m.technicianName}` : ""}`} src={m.technicianSignature} />
-              <SigBox title={`Customer: ${doc.client.contactPerson}`} src={m.customerSignature} />
-            </CardContent>
-          </Card>
+          {m.terms && (
+            <Card>
+              <CardHeader><CardTitle>Terms and conditions</CardTitle></CardHeader>
+              <CardContent><p className="whitespace-pre-line text-sm text-foreground">{m.terms}</p></CardContent>
+            </Card>
+          )}
+
+          {m.notes && (
+            <Card>
+              <CardHeader><CardTitle>Internal notes</CardTitle></CardHeader>
+              <CardContent><p className="whitespace-pre-line text-sm text-muted">{m.notes}</p></CardContent>
+            </Card>
+          )}
 
           <Card id="pdf-preview" className="overflow-hidden scroll-mt-6">
             <CardHeader>
@@ -129,54 +143,28 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
 
         <div className="space-y-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Dates</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Agreement</CardTitle></CardHeader>
             <CardContent className="space-y-3 text-sm">
-              <Row label="Service date" value={fmt(m.maintenanceDate)} />
-              <Row label="Next service" value={fmt(m.nextMaintenanceDate)} />
-              <Row label="Technician" value={m.technicianName ?? "—"} />
-              {m.technicianDetails && <Row label="Details" value={m.technicianDetails} />}
+              <Row label="Valid from" value={fmt(m.validFrom)} />
+              <Row label="Valid until" value={fmt(m.validUntil)} />
+              <Row label="Billing cycle" value={m.cycle} />
+              <Row label="Billing day" value={String(m.billingDay)} />
+              <Row label="Currency" value={m.currency} />
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>System</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Client</CardTitle></CardHeader>
             <CardContent className="space-y-1 text-sm">
-              <p className="font-medium">{m.equipment?.name}</p>
-              {m.equipment?.model && <p className="text-muted">Platform {m.equipment.model}</p>}
-              {m.equipment?.serialNumber && <p className="num text-muted">{m.equipment.serialNumber}</p>}
-              {m.equipment?.location && <p className="text-muted">{m.equipment.location}</p>}
+              <p className="font-medium">{doc.client.companyName}</p>
+              <p className="num text-muted">{doc.client.clientCode}</p>
+              <p className="text-muted">{doc.client.contactPerson}</p>
+              <p className="text-muted">{doc.client.email}</p>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader>
-              <CardTitle>Service history for this system</CardTitle>
-            </CardHeader>
-            {history.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-muted">No other service records for this system.</p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {history.map((h) => (
-                  <li key={h.id} className="flex items-center justify-between gap-3 px-5 py-3">
-                    <div className="min-w-0">
-                      <Link href={`/maintenance/${h.id}`} className="num font-medium text-primary hover:underline">{h.number}</Link>
-                      <p className="text-xs text-muted">{h.maintenance?.maintenanceDate.toLocaleDateString("en-GB")}</p>
-                    </div>
-                    <StatusBadge status={h.status} />
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Email history</CardTitle>
-            </CardHeader>
+            <CardHeader><CardTitle>Email history</CardTitle></CardHeader>
             {emailLogs.length === 0 ? (
               <p className="px-5 py-6 text-sm text-muted">Not emailed yet.</p>
             ) : (
@@ -198,28 +186,6 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
         </div>
       </div>
     </>
-  );
-}
-
-function Block({ label, text }: { label: string; text: string }) {
-  return (
-    <div>
-      <h3 className="text-xs font-medium uppercase tracking-wide text-muted">{label}</h3>
-      <p className="mt-2 whitespace-pre-line text-sm text-foreground">{text}</p>
-    </div>
-  );
-}
-
-function SigBox({ title, src }: { title: string; src: string | null }) {
-  return (
-    <div>
-      <p className="text-xs font-medium uppercase tracking-wide text-muted">{title}</p>
-      {src ? (
-        <img src={src} alt={title} className="mt-2 h-24 w-full rounded-lg border border-border bg-surface object-contain" />
-      ) : (
-        <p className="mt-2 text-sm text-muted">Not signed.</p>
-      )}
-    </div>
   );
 }
 

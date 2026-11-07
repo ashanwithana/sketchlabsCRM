@@ -20,7 +20,6 @@ export type EquipmentRow = {
   location: string | null;
   installedOn: Date | null;
   notes: string | null;
-  _count: { maintenanceRecords: number };
 };
 
 type Editing = EquipmentRow | "new" | null;
@@ -85,9 +84,6 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
                 <p className="text-xs text-muted">
                   {[item.model, item.serialNumber, item.location].filter(Boolean).join(" · ") || "No details"}
                 </p>
-                <p className="mt-1 text-xs text-subtle">
-                  {item._count.maintenanceRecords} service record{item._count.maintenanceRecords === 1 ? "" : "s"}
-                </p>
               </div>
               <div className="flex gap-2">
                 <Button size="sm" variant="secondary" onClick={() => setEditing(item)} aria-label={`Edit ${item.name}`}>
@@ -98,8 +94,6 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
                   variant="ghost"
                   onClick={() => remove(item)}
                   aria-label={`Remove ${item.name}`}
-                  disabled={item._count.maintenanceRecords > 0}
-                  title={item._count.maintenanceRecords > 0 ? "System with service history is kept" : "Remove"}
                 >
                   <Trash2 />
                 </Button>

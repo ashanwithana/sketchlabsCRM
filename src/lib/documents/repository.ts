@@ -7,7 +7,7 @@ export const REPO_PAGE_SIZE = 25;
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   QUOTATION: "Quotation",
   CR: "CR",
-  MAINTENANCE: "Maintenance",
+  MAINTENANCE: "Agreement",
   INVOICE: "Invoice",
 };
 

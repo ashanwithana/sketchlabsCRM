@@ -158,17 +158,8 @@ export async function deleteEquipmentAction(clientId: string, equipmentId: strin
   const user = await requireUser();
   const equipment = await db.equipment.findFirst({
     where: { id: equipmentId, clientId },
-    include: { _count: { select: { maintenanceRecords: true } } },
   });
   if (!equipment) return { ok: false, error: "System not found." };
-
-  // Service history is kept: a system with maintenance records is not removed.
-  if (equipment._count.maintenanceRecords > 0) {
-    return {
-      ok: false,
-      error: `${equipment.name} has ${equipment._count.maintenanceRecords} service record(s). Keep it for history.`,
-    };
-  }
 
   await db.equipment.delete({ where: { id: equipmentId } });
   await logActivity({

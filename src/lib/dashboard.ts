@@ -6,8 +6,6 @@ export const UPCOMING_DAYS = 30;
 
 /** Summary numbers for the dashboard. Every value comes from a live query. */
 export async function getDashboardData(now: Date = new Date()) {
-  const horizon = new Date(now.getTime() + UPCOMING_DAYS * 24 * 60 * 60 * 1000);
-
   const [
     totalClients,
     quotations,
@@ -22,18 +20,14 @@ export async function getDashboardData(now: Date = new Date()) {
     }),
     db.document.count({ where: { type: "CR" } }),
     db.document.findMany({
-      where: {
-        type: "MAINTENANCE",
-        status: "SCHEDULED",
-        maintenance: { maintenanceDate: { lte: horizon } },
-      },
-      orderBy: { maintenance: { maintenanceDate: "asc" } },
+      where: { type: "MAINTENANCE", status: "ACTIVE" },
+      orderBy: { maintenance: { validUntil: "asc" } },
       take: 8,
       select: {
         id: true,
         number: true,
         client: { select: { companyName: true } },
-        maintenance: { select: { maintenanceDate: true, equipment: { select: { name: true } } } },
+        maintenance: { select: { validUntil: true, cycle: true, grandTotal: true, currency: true } },
       },
     }),
     db.activityLog.findMany({ orderBy: { createdAt: "desc" }, take: 10 }),
@@ -60,9 +54,9 @@ export async function getDashboardData(now: Date = new Date()) {
       id: m.id,
       number: m.number,
       companyName: m.client.companyName,
-      equipment: m.maintenance?.equipment?.name ?? "Unspecified system",
-      date: m.maintenance!.maintenanceDate,
-      overdue: m.maintenance!.maintenanceDate.getTime() < now.getTime(),
+      equipment: m.maintenance?.cycle ?? "Agreement",
+      date: m.maintenance?.validUntil ?? now,
+      overdue: (m.maintenance?.validUntil ?? now).getTime() < now.getTime(),
     })),
     recentActivity,
   };

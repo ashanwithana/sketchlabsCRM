@@ -62,13 +62,12 @@ export async function getClientWithHistory(id: string) {
     include: {
       equipment: {
         orderBy: { name: "asc" },
-        include: { _count: { select: { maintenanceRecords: true } } },
       },
       documents: {
         orderBy: { issueDate: "desc" },
         include: {
           quotation: { select: { grandTotal: true, validUntil: true } },
-          maintenance: { select: { nextMaintenanceDate: true, maintenanceDate: true } },
+          maintenance: { select: { validFrom: true, validUntil: true, cycle: true, grandTotal: true, currency: true } },
           invoice: { select: { grandTotal: true, currency: true, dueDate: true, periodStart: true } },
         },
       },

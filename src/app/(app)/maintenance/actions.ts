@@ -49,12 +49,9 @@ export async function saveMaintenanceAction(input: MaintenanceInput, id?: string
 export async function setMaintenanceStatusAction(id: string, status: string): Promise<MaintenanceActionResult> {
   const user = await requireUser();
   try {
-    const followUp = await setMaintenanceStatus(id, status, user.name);
+    await setMaintenanceStatus(id, status, user.name);
     revalidateMaintenance(id);
-    return {
-      ok: true,
-      message: followUp ? `Status updated. Next service scheduled as ${followUp}.` : "Status updated.",
-    };
+    return { ok: true, message: "Status updated." };
   } catch (err) {
     if (err instanceof MaintenanceError) return { ok: false, error: err.message };
     throw err;

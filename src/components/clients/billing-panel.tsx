@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -52,9 +53,11 @@ type Props = {
   };
   services: ServiceRow[];
   invoices: InvoiceRow[];
+  agreementNumber?: string | null;
+  agreementId?: string | null;
 };
 
-export function BillingPanel({ clientId, currency, billing, services, invoices }: Props) {
+export function BillingPanel({ clientId, currency, billing, services, invoices, agreementNumber, agreementId }: Props) {
   const router = useRouter();
   const [editing, setEditing] = React.useState<EditingService>(null);
   const [message, setMessage] = React.useState<{ type: "ok" | "error"; text: string } | null>(null);
@@ -128,6 +131,15 @@ export function BillingPanel({ clientId, currency, billing, services, invoices }
               </Button>
             </span>
           </div>
+          {agreementNumber && (
+            <p className="text-xs text-muted">
+              Billing is driven by maintenance agreement{" "}
+              <Link href={`/maintenance/${agreementId}`} className="font-medium text-primary hover:underline">
+                {agreementNumber}
+              </Link>
+              . Editing the agreement updates these services.
+            </p>
+          )}
           {services.length === 0 && <p className="text-sm text-muted">Add at least one recurring service below to enable invoicing.</p>}
         </CardContent>
       </Card>

@@ -26,8 +26,7 @@ export const QUOTATION_STATUSES = [
 
 export const CR_STATUSES = ["DRAFT", "SENT", "APPROVED"] as const;
 
-export const MAINTENANCE_STATUSES = ["SCHEDULED", "COMPLETED", "CANCELLED"] as const;
-
+export const MAINTENANCE_STATUSES = ["ACTIVE", "CANCELLED"] as const;
 export const INVOICE_STATUSES = ["DRAFT", "SENT", "PAID", "VOID"] as const;
 
 // Recurring maintenance billing. `months` is the cycle length used by the invoice cron.

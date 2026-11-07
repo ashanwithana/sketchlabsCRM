@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { CountUp } from "@/components/dashboard/count-up";
 import { requireUser } from "@/lib/auth/session";
-import { getDashboardData, UPCOMING_DAYS } from "@/lib/dashboard";
+import { getDashboardData } from "@/lib/dashboard";
 import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Dashboard" };
@@ -22,7 +22,7 @@ export default async function DashboardPage() {
     { label: "Pending quotations", value: data.pendingQuotations, icon: Clock, href: "/quotations?status=PENDING", tone: "warning" },
     { label: "Approved quotations", value: data.approvedQuotations, icon: CheckCircle2, href: "/quotations?status=APPROVED", tone: "success" },
     { label: "CR documents", value: data.totalCrs, icon: ClipboardCheck, href: "/cr", tone: "primary" },
-    { label: `Upcoming service (${UPCOMING_DAYS} days)`, value: data.upcomingMaintenance.length, icon: CalendarClock, href: "/maintenance", tone: "info" },
+    { label: "Active agreements", value: data.upcomingMaintenance.length, icon: CalendarClock, href: "/maintenance", tone: "info" },
   ] as const;
 
   const toneClasses: Record<string, string> = {
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
       <div className="mt-6 grid gap-6 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Upcoming maintenance</CardTitle>
+            <CardTitle>Active agreements</CardTitle>
             <Link href="/maintenance" className="text-xs font-medium text-primary hover:underline">
               View all
             </Link>
@@ -81,8 +81,8 @@ export default async function DashboardPage() {
           {data.upcomingMaintenance.length === 0 ? (
             <EmptyState
               icon={<Wrench />}
-              title="Nothing scheduled"
-              description={`No services are due in the next ${UPCOMING_DAYS} days.`}
+              title="No active agreements"
+              description="Create a maintenance agreement to set up recurring billing."
             />
           ) : (
             <ul className="divide-y divide-border">
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
             <QuickAction href="/clients/new" label="Register a client" description="Add a company and its contact" />
             <QuickAction href="/quotations/new" label="New quotation" description="Coming in Task 5" disabled />
             <QuickAction href="/cr/new" label="New CR document" description="Coming in Task 8" disabled />
-            <QuickAction href="/maintenance/new" label="New maintenance report" description="Coming in Task 9" disabled />
+            <QuickAction href="/maintenance/new" label="New maintenance agreement" description="Set up recurring billing" />
           </div>
         </Card>
 

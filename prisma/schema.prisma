@@ -116,8 +116,6 @@ model Equipment {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  maintenanceRecords MaintenanceRecord[]
-
   @@index([clientId])
 }
 
@@ -216,36 +214,41 @@ model CRDocument {
 }
 
 model MaintenanceRecord {
-  id                    String    @id @default(cuid())
-  documentId            String    @unique
-  document              Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
-  equipmentId           String?
-  equipment             Equipment? @relation(fields: [equipmentId], references: [id])
-  maintenanceDate       DateTime
-  nextMaintenanceDate   DateTime?
-  description           String
-  workPerformed         String?
-  technicianName        String?
-  technicianDetails     String?
-  customerRemarks       String?
-  recommendations       String?
-  customerSignature     String?
-  technicianSignature   String?
-  createdAt             DateTime  @default(now())
-  updatedAt             DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  documentId  String    @unique
+  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  // Scope of the agreement (the work the studio keeps running for the client).
+  description String
+  // Agreement validity period.
+  validFrom   DateTime
+  validUntil  DateTime
+  // Billing cadence this agreement commits the client to.
+  cycle       String       @default("MONTHLY") // MONTHLY | QUARTERLY | ANNUAL
+  billingDay  Int          @default(1) // day of month 1..28
+  subtotal    Int          @default(0) // minor units
+  taxTotal    Int          @default(0)
+  grandTotal  Int          @default(0)
+  currency    String       @default("USD")
+  terms       String?
+  notes       String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  parts MaintenancePart[]
+  items MaintenanceLine[]
 
-  @@index([equipmentId])
+  @@index([cycle])
 }
 
-model MaintenancePart {
+model MaintenanceLine {
   id          String            @id @default(cuid())
   recordId    String
   record      MaintenanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
-  name        String
+  description String
   quantity    Int               @default(1)
-  notes       String?
+  unitPrice   Int               // minor units
+  taxRateBp   Int               @default(0) // basis points
+  lineTotal   Int               @default(0) // minor units, after tax
+  sortOrder   Int               @default(0)
 
   @@index([recordId])
 }

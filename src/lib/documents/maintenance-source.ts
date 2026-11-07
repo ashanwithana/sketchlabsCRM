@@ -20,56 +20,58 @@ async function fileSource(relative: string | null): Promise<{ src: string; sha: 
   }
 }
 
-/** Gathers everything a maintenance report prints, plus the snapshot used for revision hashing. */
 export async function loadMaintenanceSource(documentId: string) {
   const doc = await db.document.findFirst({
     where: { id: documentId, type: "MAINTENANCE" },
     include: {
       client: true,
-      maintenance: { include: { parts: { orderBy: { name: "asc" } }, equipment: true } },
+      maintenance: { include: { items: { orderBy: { sortOrder: "asc" } } } },
     },
   });
-  if (!doc?.maintenance || !doc.maintenance.equipment) throw new PdfError("This maintenance record no longer exists.");
+  if (!doc?.maintenance) throw new PdfError("This maintenance agreement no longer exists.");
   const m = doc.maintenance;
-  const eq = m.equipment;
-  if (!eq) throw new PdfError("This maintenance record has no system.");
+
   const company = await getCompanySettings();
   const logo = await fileSource(company.logoPath);
   const signature = await fileSource(company.signaturePath);
 
-  const maintenanceDate = isoDay(m.maintenanceDate) as string;
-  const nextMaintenanceDate = isoDay(m.nextMaintenanceDate);
-  const equipment = { name: eq.name, model: eq.model, serialNumber: eq.serialNumber, location: eq.location };
+  const validFrom = isoDay(m.validFrom) as string;
+  const validUntil = isoDay(m.validUntil) as string;
+
+  const terms = m.terms ?? company.maintenanceTerms;
 
   const snapshot = {
     type: "MAINTENANCE",
     template: PDF_TEMPLATE_VERSION,
     reference: doc.number,
     status: doc.status,
-    maintenanceDate,
-    nextMaintenanceDate,
+    validFrom,
+    validUntil,
+    cycle: m.cycle,
+    billingDay: m.billingDay,
+    currency: m.currency,
+    scope: m.description,
+    terms,
+    subtotal: m.subtotal,
+    taxTotal: m.taxTotal,
+    grandTotal: m.grandTotal,
+    items: m.items.map((i) => [i.description, i.quantity, i.unitPrice, i.taxRateBp, i.lineTotal]),
     client: [doc.client.clientCode, doc.client.companyName, doc.client.contactPerson, doc.client.email, doc.client.phone, doc.client.billingAddress, doc.client.registrationNumber, doc.client.vatNumber],
     company: [company.companyName, company.tagline, company.addressLine, company.phone, company.email, company.website, company.registrationNumber, company.vatNumber],
-    equipment: [equipment.name, equipment.model, equipment.serialNumber, equipment.location],
-    description: m.description,
-    workPerformed: m.workPerformed,
-    technicianName: m.technicianName,
-    technicianDetails: m.technicianDetails,
-    parts: m.parts.map((p) => [p.name, p.quantity, p.notes]),
-    customerRemarks: m.customerRemarks,
-    recommendations: m.recommendations,
-    customerSignatureSha: m.customerSignature ? sha256(m.customerSignature) : null,
-    technicianSignatureSha: m.technicianSignature ? sha256(m.technicianSignature) : null,
     logoSha: logo?.sha ?? null,
     companySignatureSha: signature?.sha ?? null,
-    terms: company.maintenanceTerms,
   };
 
   const data: MaintenancePdfData = {
     reference: doc.number,
     status: doc.status,
-    maintenanceDate,
-    nextMaintenanceDate,
+    validFrom,
+    validUntil,
+    cycle: m.cycle,
+    billingDay: m.billingDay,
+    currency: m.currency,
+    scope: m.description,
+    terms,
     client: {
       companyName: doc.client.companyName,
       clientCode: doc.client.clientCode,
@@ -89,24 +91,24 @@ export async function loadMaintenanceSource(documentId: string) {
       website: company.website,
       registrationNumber: company.registrationNumber,
       vatNumber: company.vatNumber,
-      bankName: null,
-      bankAccountName: null,
-      bankAccountNumber: null,
-      bankBranch: null,
+      bankName: company.bankName,
+      bankAccountName: company.bankAccountName,
+      bankAccountNumber: company.bankAccountNumber,
+      bankBranch: company.bankBranch,
     },
-    equipment,
-    description: m.description,
-    workPerformed: m.workPerformed,
-    technicianName: m.technicianName,
-    technicianDetails: m.technicianDetails,
-    parts: m.parts.map((p) => ({ name: p.name, quantity: p.quantity, notes: p.notes })),
-    customerRemarks: m.customerRemarks,
-    recommendations: m.recommendations,
-    customerSignatureSrc: m.customerSignature,
-    technicianSignatureSrc: m.technicianSignature,
+    items: m.items.map((i, idx) => ({
+      position: idx + 1,
+      description: i.description,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+      taxRateBp: i.taxRateBp,
+      lineTotal: i.lineTotal,
+    })),
+    subtotal: m.subtotal,
+    taxTotal: m.taxTotal,
+    grandTotal: m.grandTotal,
     logoSrc: logo?.src ?? null,
     signatureSrc: signature?.src ?? null,
-    terms: company.maintenanceTerms,
   };
 
   return { doc, snapshot, element: MaintenanceDocument(data) };
