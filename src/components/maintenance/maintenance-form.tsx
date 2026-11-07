@@ -83,7 +83,7 @@ export function MaintenanceForm({
 
         <Card>
           <CardHeader>
-            <CardTitle>Client and equipment</CardTitle>
+            <CardTitle>Client and system</CardTitle>
             {documentNumber && <span className="num text-xs font-medium text-muted">{documentNumber}</span>}
           </CardHeader>
           <CardContent className="space-y-4">
@@ -97,14 +97,14 @@ export function MaintenanceForm({
                 </Select>
               </Field>
               <Field
-                label="Equipment or service"
+                label="System or service"
                 htmlFor="equipmentId"
                 required
                 error={err("equipmentId")}
-                hint={clientId && clientEquipment.length === 0 ? "This client has no equipment yet." : undefined}
+                hint={clientId && clientEquipment.length === 0 ? "This client has no systems yet." : undefined}
               >
                 <Select id="equipmentId" disabled={!clientId} {...register("equipmentId")}>
-                  <option value="">{clientId ? "Choose equipment…" : "Choose a client first"}</option>
+                  <option value="">{clientId ? "Choose a system…" : "Choose a client first"}</option>
                   {clientEquipment.map((e) => (
                     <option key={e.id} value={e.id}>{e.label}</option>
                   ))}
@@ -113,8 +113,8 @@ export function MaintenanceForm({
             </div>
             {clientId && clientEquipment.length === 0 && (
               <p className="text-sm text-muted">
-                Add the equipment on the{" "}
-                <Link href={`/clients/${clientId}?tab=equipment`} className="font-medium text-primary hover:underline">client’s equipment tab</Link>{" "}
+                Add the system on the{" "}
+                <Link href={`/clients/${clientId}?tab=equipment`} className="font-medium text-primary hover:underline">client’s systems tab</Link>{" "}
                 first, then come back.
               </p>
             )}

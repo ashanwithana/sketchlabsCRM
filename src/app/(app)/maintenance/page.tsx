@@ -76,7 +76,7 @@ export default async function MaintenancePage({ searchParams }: { searchParams: 
                   <tr>
                     <th className="px-5 py-3 font-medium">Number</th>
                     <th className="px-5 py-3 font-medium">Client</th>
-                    <th className="px-5 py-3 font-medium">Equipment</th>
+                    <th className="px-5 py-3 font-medium">System</th>
                     <th className="px-5 py-3 font-medium">Service date</th>
                     <th className="px-5 py-3 font-medium">Next service</th>
                     <th className="px-5 py-3 font-medium">Status</th>

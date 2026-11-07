@@ -24,10 +24,10 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Prisma w
 ## Features
 
 - **Dashboard:** Live counts for clients, quotations (pending, approved, expired), CR documents, and upcoming services, plus recent activity and quick actions.
-- **Clients:** Registration with an automatic `CL-####` ID, search, filters, archive instead of delete when documents exist, CSV export, equipment register, activity timeline.
+- **Clients:** Registration with an automatic `CL-####` ID, search, filters, archive instead of delete when documents exist, CSV export, system register (software, websites, and applications you maintain), activity timeline.
 - **Quotations:** Line items with discount and tax, live totals, automatic `QT-YYYY-####` numbers, statuses (Draft, Sent, Pending, Approved, Rejected, Expired), duplicate, client approval links.
 - **CR documents:** Linked to a quotation of the same client, scope pre-filled from the quotation, customer signature pad, `CR-YYYY-####` numbers.
-- **Maintenance:** Service records with equipment, parts, work performed, technician and customer signatures, automatic next-service scheduling, upcoming and overdue views, equipment service history.
+- **Maintenance:** Service records linked to registered systems (software, websites, applications), parts, work performed, technician and customer signatures, automatic next-service scheduling, upcoming and overdue views, per-system service history.
 - **PDFs:** Shared layout with logo, company details, reference, client block, content, bank details, terms, signature blocks, and "Page X of Y" footers. PDFs are rendered on demand from the current data and are never stored on disk; each content change is recorded as a small revision entry.
 - **Email:** Send any document with its latest PDF attached, editable templates with placeholders, delivery log with retry for failures, test email.
 - **Repository:** One place for every document. Search by client or number, filter by type, status, and issue date, see revision history, CSV export.

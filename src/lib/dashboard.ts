@@ -60,7 +60,7 @@ export async function getDashboardData(now: Date = new Date()) {
       id: m.id,
       number: m.number,
       companyName: m.client.companyName,
-      equipment: m.maintenance?.equipment?.name ?? "Unspecified equipment",
+      equipment: m.maintenance?.equipment?.name ?? "Unspecified system",
       date: m.maintenance!.maintenanceDate,
       overdue: m.maintenance!.maintenanceDate.getTime() < now.getTime(),
     })),

@@ -42,7 +42,7 @@ export type ClientInput = z.input<typeof clientSchema>;
 export type ClientValues = z.output<typeof clientSchema>;
 
 export const equipmentSchema = z.object({
-  name: z.string().trim().min(2, "Enter the equipment name.").max(120),
+  name: z.string().trim().min(2, "Enter the system name.").max(120),
   model: z.string().trim().max(120).transform((v) => (v === "" ? null : v)),
   serialNumber: z.string().trim().max(120).transform((v) => (v === "" ? null : v)),
   location: z.string().trim().max(200).transform((v) => (v === "" ? null : v)),

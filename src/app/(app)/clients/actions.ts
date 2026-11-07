@@ -129,16 +129,16 @@ export async function saveEquipmentAction(
 
   if (equipmentId) {
     const owned = await db.equipment.findFirst({ where: { id: equipmentId, clientId } });
-    if (!owned) return { ok: false, error: "That equipment does not belong to this client." };
+    if (!owned) return { ok: false, error: "That system does not belong to this client." };
     await db.equipment.update({ where: { id: equipmentId }, data: parsed.data });
     await logActivity({
       action: "UPDATE",
       entityType: "Client",
       entityId: clientId,
-      summary: `${user.name} updated equipment ${parsed.data.name} on ${client.clientCode}`,
+      summary: `${user.name} updated system ${parsed.data.name} on ${client.clientCode}`,
     });
     revalidatePath(`/clients/${clientId}`);
-    return { ok: true, data: { id: equipmentId }, message: "Equipment updated." };
+    return { ok: true, data: { id: equipmentId }, message: "System updated." };
   }
 
   const created = await db.equipment.create({ data: { ...parsed.data, clientId } });
@@ -146,10 +146,10 @@ export async function saveEquipmentAction(
     action: "CREATE",
     entityType: "Client",
     entityId: clientId,
-    summary: `${user.name} added equipment ${created.name} to ${client.clientCode}`,
+    summary: `${user.name} added system ${created.name} to ${client.clientCode}`,
   });
   revalidatePath(`/clients/${clientId}`);
-  return { ok: true, data: { id: created.id }, message: "Equipment added." };
+  return { ok: true, data: { id: created.id }, message: "System added." };
 }
 
 export async function deleteEquipmentAction(clientId: string, equipmentId: string): Promise<ActionResult> {
@@ -158,9 +158,9 @@ export async function deleteEquipmentAction(clientId: string, equipmentId: strin
     where: { id: equipmentId, clientId },
     include: { _count: { select: { maintenanceRecords: true } } },
   });
-  if (!equipment) return { ok: false, error: "Equipment not found." };
+  if (!equipment) return { ok: false, error: "System not found." };
 
-  // Service history is kept: equipment with maintenance records is not removed.
+  // Service history is kept: a system with maintenance records is not removed.
   if (equipment._count.maintenanceRecords > 0) {
     return {
       ok: false,
@@ -173,8 +173,8 @@ export async function deleteEquipmentAction(clientId: string, equipmentId: strin
     action: "DELETE",
     entityType: "Client",
     entityId: clientId,
-    summary: `${user.name} removed equipment ${equipment.name}`,
+    summary: `${user.name} removed system ${equipment.name}`,
   });
   revalidatePath(`/clients/${clientId}`);
-  return { ok: true, message: "Equipment removed." };
+  return { ok: true, message: "System removed." };
 }

@@ -50,7 +50,7 @@ export function MaintenanceDocument(data: MaintenancePdfData) {
     ...(data.nextMaintenanceDate ? [{ label: "Next service", value: day(data.nextMaintenanceDate) }] : []),
     { label: "Status", value: data.status.charAt(0) + data.status.slice(1).toLowerCase() },
   ];
-  const eq = [data.equipment.name, data.equipment.model, data.equipment.serialNumber && `S/N ${data.equipment.serialNumber}`, data.equipment.location]
+  const eq = [data.equipment.name, data.equipment.model, data.equipment.serialNumber, data.equipment.location]
     .filter(Boolean)
     .join(" · ");
 
@@ -64,7 +64,7 @@ export function MaintenanceDocument(data: MaintenancePdfData) {
       client={data.client}
     >
       <div className="section">
-        <div className="section-label">Equipment serviced</div>
+        <div className="section-label">System serviced</div>
         <div className="card">{eq}</div>
       </div>
 

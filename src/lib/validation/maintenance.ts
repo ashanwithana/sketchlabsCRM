@@ -42,7 +42,7 @@ export const maintenancePartSchema = z.object({
 export const maintenanceSchema = z
   .object({
     clientId: z.string().min(1, "Choose a client."),
-    equipmentId: z.string().min(1, "Choose the equipment or service that was maintained."),
+    equipmentId: z.string().min(1, "Choose the system or service that was maintained."),
     status: z.enum(["SCHEDULED", "COMPLETED", "CANCELLED"], { errorMap: () => ({ message: "Choose a status." }) }),
     maintenanceDate: isoDate,
     nextMaintenanceDate: optionalDate,

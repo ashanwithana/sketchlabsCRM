@@ -40,10 +40,10 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Equipment register</CardTitle>
+        <CardTitle>System register</CardTitle>
         {editing === null && (
           <Button size="sm" onClick={() => setEditing("new")}>
-            <Plus /> Add equipment
+            <Plus /> Add system
           </Button>
         )}
       </CardHeader>
@@ -73,8 +73,8 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
       {items.length === 0 ? (
         <EmptyState
           icon={<Wrench />}
-          title="No equipment recorded"
-          description="Add the machines or systems you service. Maintenance reports are linked to equipment."
+          title="No systems recorded"
+          description="Add the software, websites, and applications you maintain. Maintenance reports are linked to systems."
         />
       ) : (
         <ul className="divide-y divide-border">
@@ -83,7 +83,7 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
               <div className="min-w-0">
                 <p className="font-medium text-foreground">{item.name}</p>
                 <p className="text-xs text-muted">
-                  {[item.model, item.serialNumber && `S/N ${item.serialNumber}`, item.location].filter(Boolean).join(" · ") || "No details"}
+                  {[item.model, item.serialNumber, item.location].filter(Boolean).join(" · ") || "No details"}
                 </p>
                 <p className="mt-1 text-xs text-subtle">
                   {item._count.maintenanceRecords} service record{item._count.maintenanceRecords === 1 ? "" : "s"}
@@ -99,7 +99,7 @@ export function EquipmentPanel({ clientId, items }: { clientId: string; items: E
                   onClick={() => remove(item)}
                   aria-label={`Remove ${item.name}`}
                   disabled={item._count.maintenanceRecords > 0}
-                  title={item._count.maintenanceRecords > 0 ? "Equipment with service history is kept" : "Remove"}
+                  title={item._count.maintenanceRecords > 0 ? "System with service history is kept" : "Remove"}
                 >
                   <Trash2 />
                 </Button>
@@ -163,7 +163,7 @@ function EquipmentForm({
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold">{item ? `Edit ${item.name}` : "New equipment"}</h3>
+        <h3 className="text-sm font-semibold">{item ? `Edit ${item.name}` : "New system"}</h3>
         <button type="button" onClick={onCancel} className="rounded-md p-1 text-muted hover:bg-surface hover:text-foreground" aria-label="Cancel">
           <X className="size-4" />
         </button>
@@ -171,18 +171,18 @@ function EquipmentForm({
       {serverError && <p role="alert" className="text-sm text-danger">{serverError}</p>}
       <div className="grid gap-4 md:grid-cols-2">
         <Field label="Name" htmlFor="eq-name" required error={err("name")}>
-          <Input id="eq-name" placeholder="e.g. Rooftop chiller" {...register("name")} />
+          <Input id="eq-name" placeholder="e.g. thesketchlabs.com website" {...register("name")} />
         </Field>
-        <Field label="Model" htmlFor="eq-model" error={err("model")}>
-          <Input id="eq-model" {...register("model")} />
+        <Field label="Platform" htmlFor="eq-model" error={err("model")}>
+          <Input id="eq-model" placeholder="e.g. Next.js, WordPress" {...register("model")} />
         </Field>
-        <Field label="Serial number" htmlFor="eq-serial" error={err("serialNumber")}>
-          <Input id="eq-serial" {...register("serialNumber")} />
+        <Field label="URL" htmlFor="eq-serial" error={err("serialNumber")}>
+          <Input id="eq-serial" placeholder="e.g. https://example.com" {...register("serialNumber")} />
         </Field>
-        <Field label="Location" htmlFor="eq-location" error={err("location")}>
-          <Input id="eq-location" {...register("location")} />
+        <Field label="Hosting / server" htmlFor="eq-location" error={err("location")}>
+          <Input id="eq-location" placeholder="e.g. Vercel" {...register("location")} />
         </Field>
-        <Field label="Installed on" htmlFor="eq-installed" error={err("installedOn")}>
+        <Field label="Go-live date" htmlFor="eq-installed" error={err("installedOn")}>
           <Input id="eq-installed" type="date" {...register("installedOn")} />
         </Field>
         <Field label="Notes" htmlFor="eq-notes" error={err("notes")} className="md:col-span-2">
@@ -195,7 +195,7 @@ function EquipmentForm({
         </Button>
         <Button type="submit" disabled={isSubmitting}>
           {isSubmitting && <Loader2 className="animate-spin" />}
-          {item ? "Save equipment" : "Add equipment"}
+          {item ? "Save system" : "Add system"}
         </Button>
       </div>
     </form>

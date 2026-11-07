@@ -40,7 +40,7 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
 
       <PageHeader
         title={doc.number}
-        description={`${doc.client.companyName} · ${m.equipment?.name ?? "Equipment"}`}
+        description={`${doc.client.companyName} · ${m.equipment?.name ?? "System"}`}
         actions={
           <Link href={`/maintenance/${id}/edit`} className={buttonVariants({ variant: "secondary" })}>
             <Pencil /> Edit
@@ -142,22 +142,22 @@ export default async function MaintenanceDetailPage({ params }: { params: Promis
 
           <Card>
             <CardHeader>
-              <CardTitle>Equipment</CardTitle>
+              <CardTitle>System</CardTitle>
             </CardHeader>
             <CardContent className="space-y-1 text-sm">
               <p className="font-medium">{m.equipment?.name}</p>
-              {m.equipment?.model && <p className="text-muted">Model {m.equipment.model}</p>}
-              {m.equipment?.serialNumber && <p className="num text-muted">S/N {m.equipment.serialNumber}</p>}
+              {m.equipment?.model && <p className="text-muted">Platform {m.equipment.model}</p>}
+              {m.equipment?.serialNumber && <p className="num text-muted">{m.equipment.serialNumber}</p>}
               {m.equipment?.location && <p className="text-muted">{m.equipment.location}</p>}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Service history for this equipment</CardTitle>
+              <CardTitle>Service history for this system</CardTitle>
             </CardHeader>
             {history.length === 0 ? (
-              <p className="px-5 py-6 text-sm text-muted">No other service records for this equipment.</p>
+              <p className="px-5 py-6 text-sm text-muted">No other service records for this system.</p>
             ) : (
               <ul className="divide-y divide-border">
                 {history.map((h) => (

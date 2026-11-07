@@ -32,7 +32,7 @@ export async function loadMaintenanceSource(documentId: string) {
   if (!doc?.maintenance || !doc.maintenance.equipment) throw new PdfError("This maintenance record no longer exists.");
   const m = doc.maintenance;
   const eq = m.equipment;
-  if (!eq) throw new PdfError("This maintenance record has no equipment.");
+  if (!eq) throw new PdfError("This maintenance record has no system.");
   const company = await getCompanySettings();
   const logo = await fileSource(company.logoPath);
   const signature = await fileSource(company.signaturePath);

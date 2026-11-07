@@ -13,7 +13,7 @@ async function assertClientAndEquipment(clientId: string, equipmentId: string) {
   const client = await db.client.findUnique({ where: { id: clientId }, select: { archivedAt: true } });
   if (!client || client.archivedAt) throw new MaintenanceError("Choose an active client.");
   const equipment = await db.equipment.findFirst({ where: { id: equipmentId, clientId }, select: { id: true } });
-  if (!equipment) throw new MaintenanceError("That equipment does not belong to this client.");
+  if (!equipment) throw new MaintenanceError("That system does not belong to this client.");
 }
 
 function recordFields(input: MaintenanceValues) {
@@ -71,7 +71,7 @@ async function createFollowUpIfNeeded(recordId: string, actor: string): Promise<
           create: {
             equipmentId: record.equipmentId,
             maintenanceDate: record.nextMaintenanceDate as Date,
-            description: `Scheduled service for ${record.equipment?.name ?? "equipment"}, following ${record.document.number}.`,
+            description: `Scheduled service for ${record.equipment?.name ?? "system"}, following ${record.document.number}.`,
           },
         },
       },

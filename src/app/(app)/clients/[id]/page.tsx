@@ -20,7 +20,7 @@ const TABS = [
   { key: "quotations", label: "Quotations", icon: FileText },
   { key: "cr", label: "CR documents", icon: ClipboardCheck },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
-  { key: "equipment", label: "Equipment", icon: Settings2 },
+  { key: "equipment", label: "Systems", icon: Settings2 },
   { key: "activity", label: "Activity", icon: History },
 ] as const;
 
@@ -127,7 +127,7 @@ export default async function ClientDetailPage({
               <Stat label="Quotations" value={quotations.length} href={`/clients/${client.id}?tab=quotations`} />
               <Stat label="CR documents" value={crs.length} href={`/clients/${client.id}?tab=cr`} />
               <Stat label="Maintenance reports" value={maintenance.length} href={`/clients/${client.id}?tab=maintenance`} />
-              <Stat label="Equipment" value={client.equipment.length} href={`/clients/${client.id}?tab=equipment`} />
+              <Stat label="Systems" value={client.equipment.length} href={`/clients/${client.id}?tab=equipment`} />
             </CardContent>
           </Card>
         </div>
