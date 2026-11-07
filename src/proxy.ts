@@ -6,7 +6,8 @@ import { getEnv } from "@/lib/env";
 // Pages and server actions still call requireUser(), which also checks the user exists.
 const SESSION_COOKIE = "cma_session";
 // /approve/<token> is for clients. The token is its only credential, checked by the page itself.
-const PUBLIC_PATHS = ["/login", "/approve"];
+// /api/cron/* authenticates itself with the CRON_SECRET bearer token inside the route.
+const PUBLIC_PATHS = ["/login", "/approve", "/api/cron"];
 
 async function hasValidSession(token: string | undefined): Promise<boolean> {
   if (!token) return false;
