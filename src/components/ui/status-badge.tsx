@@ -25,6 +25,8 @@ const statusTone: Record<string, Tone> = {
   FAILED: "danger",
   EXPIRED: "neutral",
   QUEUED: "warning",
+  PAID: "success",
+  VOID: "neutral",
 };
 
 const labels: Record<string, string> = {
@@ -39,6 +41,8 @@ const labels: Record<string, string> = {
   CANCELLED: "Cancelled",
   FAILED: "Failed",
   QUEUED: "Queued",
+  PAID: "Paid",
+  VOID: "Void",
 };
 
 export function StatusBadge({ status, tone, className }: { status: string; tone?: Tone; className?: string }) {

@@ -74,12 +74,33 @@ model Client {
   category           String   // CORPORATE | SME | GOVERNMENT | NONPROFIT | INDIVIDUAL
   notes              String?
   archivedAt         DateTime?
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  // Recurring maintenance billing: the cron generates and emails an invoice on the due date.
+  billingCycle       String?   // MONTHLY | QUARTERLY | ANNUAL
+  billingDay         Int?      // day of month (1-28) the invoice is sent
+  billingActive      Boolean   @default(false)
+  billingAnchor      DateTime? // when the schedule was first activated; anchors the first due date
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   equipment   Equipment[]
   documents   Document[]
   emailLogs   EmailLog[]
+  services    ClientService[]
+}
+
+// One row per recurring service offered to a client. The amounts are maintained by hand;
+// each generated invoice snapshots the current list.
+model ClientService {
+  id          String   @id @default(cuid())
+  clientId    String
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  description String
+  amount      Int      // minor units, charged every billing period
+  taxRateBp   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([clientId])
 }
 
 model Equipment {
@@ -126,6 +147,7 @@ model Document {
   quotation      Quotation?
   cr             CRDocument?
   maintenance    MaintenanceRecord?
+  invoice        Invoice?
   revisions      DocumentRevision[]
   emailLogs      EmailLog[]
 
@@ -226,6 +248,41 @@ model MaintenancePart {
   notes       String?
 
   @@index([recordId])
+}
+
+// A generated maintenance invoice. Created by the billing cron (or by hand from the
+// client's Billing tab) and emailed with its PDF attached.
+model Invoice {
+  id          String    @id @default(cuid())
+  documentId  String    @unique
+  document    Document  @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  periodStart DateTime? // due date of the billing period this invoice settles; null for one-offs
+  dueDate     DateTime
+  currency    String    @default("USD")
+  subtotal    Int       @default(0) // minor units
+  taxTotal    Int       @default(0)
+  grandTotal  Int       @default(0)
+  terms       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  lines InvoiceLine[]
+
+  @@index([periodStart])
+}
+
+model InvoiceLine {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  position    Int
+  description String
+  unitPrice   Int     // minor units
+  taxRateBp   Int     @default(0)
+  lineTax     Int     @default(0)
+  lineTotal   Int     @default(0)
+
+  @@index([invoiceId])
 }
 
 // Every generated PDF is stored as a revision. Unchanged content reuses the revision.

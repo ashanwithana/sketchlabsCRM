@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Mail, MapPin, Pencil, Phone, Building2, UserRound, ClipboardCheck, FileText, Wrench, Settings2, History } from "lucide-react";
+import { Mail, MapPin, Pencil, Phone, Building2, UserRound, ClipboardCheck, FileText, Wrench, Settings2, History, ReceiptText } from "lucide-react";
 import { PageHeader, EmptyState } from "@/components/layout/page-header";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { ArchiveClientButton, DeleteClientButton } from "@/components/clients/client-actions";
 import { EquipmentPanel } from "@/components/clients/equipment-panel";
+import { BillingPanel } from "@/components/clients/billing-panel";
+import { BILLING_CYCLES } from "@/lib/constants";
+import { firstDue, nextDue } from "@/lib/invoices/schedule";
+import { getCompanySettings } from "@/lib/settings";
 import { CLIENT_CATEGORIES } from "@/lib/constants";
 import { requireUser } from "@/lib/auth/session";
 import { getClientWithHistory } from "@/lib/clients/queries";
@@ -21,6 +25,7 @@ const TABS = [
   { key: "cr", label: "CR documents", icon: ClipboardCheck },
   { key: "maintenance", label: "Maintenance", icon: Wrench },
   { key: "equipment", label: "Systems", icon: Settings2 },
+  { key: "billing", label: "Billing", icon: ReceiptText },
   { key: "activity", label: "Activity", icon: History },
 ] as const;
 
@@ -40,6 +45,7 @@ export default async function ClientDetailPage({
   if (!data) notFound();
 
   const { client, activity } = data;
+  const settings = await getCompanySettings();
   const tab: TabKey = TABS.some((t) => t.key === rawTab) ? (rawTab as TabKey) : "overview";
   const categoryLabel = CLIENT_CATEGORIES.find((c) => c.value === client.category)?.label ?? client.category;
 
@@ -47,6 +53,20 @@ export default async function ClientDetailPage({
   const quotations = docsOf("QUOTATION");
   const crs = docsOf("CR");
   const maintenance = docsOf("MAINTENANCE");
+  const invoices = docsOf("INVOICE");
+
+  // Next scheduled invoice date: last invoiced period + cycle, or the anchor + send day.
+  const months = BILLING_CYCLES.find((c) => c.value === client.billingCycle)?.months ?? null;
+  const lastPeriod = invoices.reduce<Date | null>((max, d) => {
+    const ps = d.invoice?.periodStart;
+    return ps && (!max || ps > max) ? ps : max;
+  }, null);
+  const nextInvoiceDue =
+    client.billingActive && months !== null && client.billingDay
+      ? lastPeriod
+        ? nextDue(lastPeriod, months, client.billingDay)
+        : firstDue(client.billingAnchor ?? new Date(), client.billingDay)
+      : null;
 
   return (
     <>
@@ -76,7 +96,17 @@ export default async function ClientDetailPage({
           {TABS.map((t) => {
             const active = t.key === tab;
             const count =
-              t.key === "quotations" ? quotations.length : t.key === "cr" ? crs.length : t.key === "maintenance" ? maintenance.length : t.key === "equipment" ? client.equipment.length : null;
+              t.key === "quotations"
+                ? quotations.length
+                : t.key === "cr"
+                  ? crs.length
+                  : t.key === "maintenance"
+                    ? maintenance.length
+                    : t.key === "equipment"
+                      ? client.equipment.length
+                      : t.key === "billing"
+                        ? invoices.length
+                        : null;
             const Icon = t.icon;
             return (
               <li key={t.key}>
@@ -170,6 +200,29 @@ export default async function ClientDetailPage({
             installedOn: e.installedOn,
             notes: e.notes,
             _count: e._count,
+          }))}
+        />
+      )}
+
+      {tab === "billing" && (
+        <BillingPanel
+          clientId={client.id}
+          currency={settings.currency}
+          billing={{
+            cycle: client.billingCycle,
+            day: client.billingDay,
+            active: client.billingActive,
+            nextDue: nextInvoiceDue,
+          }}
+          services={client.services.map((s) => ({ id: s.id, description: s.description, amount: s.amount, taxRateBp: s.taxRateBp }))}
+          invoices={invoices.map((d) => ({
+            id: d.id,
+            number: d.number,
+            status: d.status,
+            issueDate: d.issueDate,
+            grandTotal: d.invoice?.grandTotal ?? 0,
+            currency: d.invoice?.currency ?? "USD",
+            dueDate: d.invoice?.dueDate ?? d.issueDate,
           }))}
         />
       )}

@@ -24,6 +24,9 @@ const schema = z.object({
   // Optional WebSocket URL of a remote headless Chrome for hosts without one (e.g. Vercel).
   // When set, PDF rendering connects here instead of launching a local Chrome.
   PUPPETEER_WS_ENDPOINT: z.string().optional().default(""),
+  // Shared secret for Vercel Cron requests. Vercel sends it as `Authorization: Bearer …`
+  // on every cron invocation when this is set. Required for /api/cron/* routes to run.
+  CRON_SECRET: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof schema>;

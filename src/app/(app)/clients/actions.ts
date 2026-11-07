@@ -8,6 +8,8 @@ import { nextNumber } from "@/lib/numbering";
 import { checkClientDeletion } from "@/lib/clients/rules";
 import { getClientDocumentCount } from "@/lib/clients/queries";
 import { clientSchema, equipmentSchema, type ClientInput, type EquipmentInput } from "@/lib/validation/client";
+import { billingScheduleSchema, billingServiceSchema, type BillingScheduleInput, type BillingServiceInput } from "@/lib/validation/billing";
+import { sendInvoiceNow, InvoiceError } from "@/lib/invoices/service";
 
 export type ActionResult<T = undefined> =
   | { ok: true; data?: T; message?: string }
@@ -177,4 +179,103 @@ export async function deleteEquipmentAction(clientId: string, equipmentId: strin
   });
   revalidatePath(`/clients/${clientId}`);
   return { ok: true, message: "System removed." };
+}
+
+/** Saves the recurring billing schedule. Activating it anchors the first due date to today. */
+export async function saveBillingScheduleAction(clientId: string, input: BillingScheduleInput): Promise<ActionResult> {
+  const user = await requireUser();
+  const parsed = billingScheduleSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Please fix the highlighted fields.", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  }
+
+  const existing = await db.client.findUnique({ where: { id: clientId }, select: { id: true, companyName: true, billingActive: true } });
+  if (!existing) return { ok: false, error: "This client no longer exists." };
+
+  // Activating (or reactivating) a schedule anchors the first due date to today.
+  const activating = parsed.data.billingActive && !existing.billingActive;
+  await db.client.update({
+    where: { id: clientId },
+    data: {
+      billingCycle: parsed.data.billingCycle,
+      billingDay: parsed.data.billingDay,
+      billingActive: parsed.data.billingActive,
+      ...(activating ? { billingAnchor: new Date() } : {}),
+    },
+  });
+
+  await logActivity({
+    action: "UPDATE",
+    entityType: "Client",
+    entityId: clientId,
+    summary: `${user.name} ${parsed.data.billingActive ? "activated" : "updated"} the billing schedule for ${existing.companyName}`,
+  });
+  revalidatePath(`/clients/${clientId}`);
+  return { ok: true, message: parsed.data.billingActive ? "Billing schedule active." : "Billing schedule saved (automatic sending is off)." };
+}
+
+/** Adds or updates one recurring service line; its amount is what each invoice bills. */
+export async function saveServiceAction(clientId: string, input: BillingServiceInput, serviceId?: string): Promise<ActionResult<{ id: string }>> {
+  const user = await requireUser();
+  const client = await db.client.findUnique({ where: { id: clientId }, select: { id: true, companyName: true } });
+  if (!client) return { ok: false, error: "This client no longer exists." };
+
+  const parsed = billingServiceSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: "Please fix the highlighted fields.", fieldErrors: fieldErrorsFrom(parsed.error.issues) };
+  }
+
+  if (serviceId) {
+    const owned = await db.clientService.findFirst({ where: { id: serviceId, clientId } });
+    if (!owned) return { ok: false, error: "That service does not belong to this client." };
+    await db.clientService.update({ where: { id: serviceId }, data: parsed.data });
+    await logActivity({
+      action: "UPDATE",
+      entityType: "Client",
+      entityId: clientId,
+      summary: `${user.name} updated the service “${parsed.data.description}” for ${client.companyName}`,
+    });
+    revalidatePath(`/clients/${clientId}`);
+    return { ok: true, data: { id: serviceId }, message: "Service updated." };
+  }
+
+  const created = await db.clientService.create({ data: { ...parsed.data, clientId } });
+  await logActivity({
+    action: "CREATE",
+    entityType: "Client",
+    entityId: clientId,
+    summary: `${user.name} added the service “${parsed.data.description}” for ${client.companyName}`,
+  });
+  revalidatePath(`/clients/${clientId}`);
+  return { ok: true, data: { id: created.id }, message: "Service added." };
+}
+
+export async function deleteServiceAction(clientId: string, serviceId: string): Promise<ActionResult> {
+  const user = await requireUser();
+  const service = await db.clientService.findFirst({ where: { id: serviceId, clientId } });
+  if (!service) return { ok: false, error: "Service not found." };
+
+  await db.clientService.delete({ where: { id: serviceId } });
+  await logActivity({
+    action: "DELETE",
+    entityType: "Client",
+    entityId: clientId,
+    summary: `${user.name} removed the service “${service.description}”`,
+  });
+  revalidatePath(`/clients/${clientId}`);
+  return { ok: true, message: "Service removed." };
+}
+
+/** Generates an invoice right now (outside the schedule) and emails it to the client. */
+export async function sendInvoiceNowAction(clientId: string): Promise<ActionResult<{ documentId: string; number: string }>> {
+  const user = await requireUser();
+  try {
+    const { documentId, number, result } = await sendInvoiceNow(clientId, user.name);
+    if (!result.ok) {
+      return { ok: false, error: `Invoice ${number} was created, but the email failed: ${result.error}` };
+    }
+    return { ok: true, data: { documentId, number }, message: `Invoice ${number} generated and emailed.` };
+  } catch (err) {
+    return { ok: false, error: err instanceof InvoiceError ? err.message : "The invoice could not be generated." };
+  }
 }

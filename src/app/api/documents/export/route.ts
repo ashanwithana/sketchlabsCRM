@@ -12,7 +12,7 @@ export async function GET(req: Request) {
   if (!user) return new NextResponse("Unauthorized", { status: 401 });
 
   const sp = new URL(req.url).searchParams;
-  const type = ["QUOTATION", "CR", "MAINTENANCE"].includes(sp.get("type") ?? "") ? (sp.get("type") as string) : "";
+  const type = ["QUOTATION", "CR", "MAINTENANCE", "INVOICE"].includes(sp.get("type") ?? "") ? (sp.get("type") as string) : "";
   const status = sp.get("status") ?? "";
   const now = new Date();
   const docs = await db.document.findMany({
@@ -22,6 +22,7 @@ export async function GET(req: Request) {
     include: {
       client: { select: { clientCode: true, companyName: true, email: true } },
       quotation: { select: { validUntil: true, grandTotal: true, currency: true } },
+      invoice: { select: { grandTotal: true, currency: true } },
       _count: { select: { revisions: true } },
     },
   });
@@ -43,8 +44,8 @@ export async function GET(req: Request) {
       d.client.email,
       d.issueDate,
       d.type === "QUOTATION" && d.quotation ? effectiveQuotationStatus(d.status, d.quotation.validUntil, now) : d.status,
-      d.quotation?.currency ?? "",
-      d.quotation ? (d.quotation.grandTotal / 100).toFixed(2) : "",
+      d.quotation?.currency ?? d.invoice?.currency ?? "",
+      d.quotation ? (d.quotation.grandTotal / 100).toFixed(2) : d.invoice ? (d.invoice.grandTotal / 100).toFixed(2) : "",
       d._count.revisions,
       d.currentRevision,
     ]),

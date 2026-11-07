@@ -10,6 +10,7 @@ import { renderHtml, htmlToPdf } from "@/lib/pdf/render";
 import { PdfError } from "./errors";
 import { loadCrSource } from "./cr-source";
 import { loadMaintenanceSource } from "./maintenance-source";
+import { loadInvoiceSource } from "./invoice-source";
 
 export { PdfError } from "./errors";
 
@@ -157,6 +158,7 @@ async function loadSource(documentId: string) {
   if (row.type === "QUOTATION") return loadQuotationSource(documentId);
   if (row.type === "CR") return loadCrSource(documentId);
   if (row.type === "MAINTENANCE") return loadMaintenanceSource(documentId);
+  if (row.type === "INVOICE") return loadInvoiceSource(documentId);
   throw new PdfError("PDFs for this document type are not available yet.");
 }
 

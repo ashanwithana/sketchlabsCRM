@@ -8,6 +8,7 @@ export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   QUOTATION: "Quotation",
   CR: "CR",
   MAINTENANCE: "Maintenance",
+  INVOICE: "Invoice",
 };
 
 export type RepoFilter = {
@@ -68,6 +69,7 @@ export async function listDocuments(filter: RepoFilter) {
       include: {
         client: { select: { companyName: true, clientCode: true } },
         quotation: { select: { validUntil: true, grandTotal: true, currency: true } },
+        invoice: { select: { grandTotal: true, currency: true, dueDate: true } },
         _count: { select: { revisions: true } },
       },
     }),
@@ -88,8 +90,8 @@ export async function listDocuments(filter: RepoFilter) {
         : r.status,
       currentRevision: r.currentRevision,
       revisionCount: r._count.revisions,
-      grandTotal: r.quotation?.grandTotal ?? null,
-      currency: r.quotation?.currency ?? null,
+      grandTotal: r.quotation?.grandTotal ?? r.invoice?.grandTotal ?? null,
+      currency: r.quotation?.currency ?? r.invoice?.currency ?? null,
     })),
   };
 }
@@ -100,6 +102,7 @@ export async function getDocumentForRepository(id: string) {
     include: {
       client: { select: { id: true, companyName: true, clientCode: true, contactPerson: true, email: true } },
       quotation: { select: { validUntil: true, grandTotal: true, currency: true } },
+      invoice: { select: { grandTotal: true, currency: true, dueDate: true, periodStart: true } },
       revisions: { orderBy: { revision: "desc" }, select: { id: true, revision: true, contentHash: true, createdAt: true } },
       emailLogs: { orderBy: { createdAt: "desc" }, take: 50 },
     },

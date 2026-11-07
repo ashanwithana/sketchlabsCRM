@@ -12,6 +12,7 @@ export const DOCUMENT_TYPES = {
   QUOTATION: "QUOTATION",
   CR: "CR",
   MAINTENANCE: "MAINTENANCE",
+  INVOICE: "INVOICE",
 } as const;
 
 export const QUOTATION_STATUSES = [
@@ -26,6 +27,17 @@ export const QUOTATION_STATUSES = [
 export const CR_STATUSES = ["DRAFT", "SENT", "APPROVED"] as const;
 
 export const MAINTENANCE_STATUSES = ["SCHEDULED", "COMPLETED", "CANCELLED"] as const;
+
+export const INVOICE_STATUSES = ["DRAFT", "SENT", "PAID", "VOID"] as const;
+
+// Recurring maintenance billing. `months` is the cycle length used by the invoice cron.
+export const BILLING_CYCLES = [
+  { value: "MONTHLY", label: "Monthly", months: 1 },
+  { value: "QUARTERLY", label: "Quarterly", months: 3 },
+  { value: "ANNUAL", label: "Annual", months: 12 },
+] as const;
+
+export type BillingCycle = (typeof BILLING_CYCLES)[number]["value"];
 
 export const EMAIL_STATUSES = ["QUEUED", "SENT", "FAILED"] as const;
 

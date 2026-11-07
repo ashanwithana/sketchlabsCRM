@@ -140,6 +140,10 @@ export async function sendDocumentEmail(input: SendInput, actor: string, deliver
   if (result.ok && doc.type === "QUOTATION" && doc.status === "DRAFT") {
     await setQuotationStatus(doc.id, "SENT", actor);
   }
+  // A draft invoice emailed by hand also moves to Sent (PAID/VOID are never overwritten).
+  if (result.ok && doc.type === "INVOICE" && doc.status === "DRAFT") {
+    await db.document.update({ where: { id: doc.id }, data: { status: "SENT" } });
+  }
   return result;
 }
 
@@ -162,7 +166,7 @@ export async function retryEmail(logId: string, actor: string, deliverFn: Delive
   }
 
   const company = await getCompanySettings();
-  return deliverAndLog({
+  const result = await deliverAndLog({
     documentId: log.documentId,
     revisionId: log.revisionId,
     clientId: log.clientId,
@@ -175,6 +179,15 @@ export async function retryEmail(logId: string, actor: string, deliverFn: Delive
     from: senderAddress(company.companyName, company.email),
     deliverFn,
   });
+
+  // A retried invoice email that now succeeds moves its document out of Draft.
+  if (result.ok && log.documentId) {
+    const doc = await db.document.findUnique({ where: { id: log.documentId }, select: { type: true, status: true } });
+    if (doc?.type === "INVOICE" && doc.status === "DRAFT") {
+      await db.document.update({ where: { id: log.documentId }, data: { status: "SENT" } });
+    }
+  }
+  return result;
 }
 
 export async function sendTestEmail(to: string, actor: string, deliverFn: DeliverFn = deliver): Promise<SendResult> {
@@ -200,7 +213,7 @@ export async function sendTestEmail(to: string, actor: string, deliverFn: Delive
 export async function buildEmailDefaults(documentId: string) {
   const doc = await db.document.findUnique({
     where: { id: documentId },
-    include: { client: true, quotation: true },
+    include: { client: true, quotation: true, invoice: true },
   });
   if (!doc) throw new EmailError("This document no longer exists.");
 
@@ -212,7 +225,11 @@ export async function buildEmailDefaults(documentId: string) {
     company: company.companyName,
     date: isoDay(doc.issueDate),
     validUntil: doc.quotation ? isoDay(doc.quotation.validUntil) : undefined,
-    amount: doc.quotation ? formatMoney(doc.quotation.grandTotal, doc.quotation.currency) : undefined,
+    amount: doc.quotation
+      ? formatMoney(doc.quotation.grandTotal, doc.quotation.currency)
+      : doc.invoice
+        ? formatMoney(doc.invoice.grandTotal, doc.invoice.currency)
+        : undefined,
   };
 
   const templates =
@@ -220,7 +237,12 @@ export async function buildEmailDefaults(documentId: string) {
       ? { subject: company.emailQuotationSubject, body: company.emailQuotationBody }
       : doc.type === "CR"
         ? { subject: company.emailCrSubject, body: company.emailCrBody }
-        : { subject: company.emailMaintenanceSubject, body: company.emailMaintenanceBody };
+        : doc.type === "INVOICE"
+          ? {
+              subject: "Invoice {{number}}",
+              body: "Hello {{contact}},\n\nPlease find invoice {{number}} for {{amount}}, due {{date}}.\n\nKind regards,\n{{company}}",
+            }
+          : { subject: company.emailMaintenanceSubject, body: company.emailMaintenanceBody };
 
   return {
     to: doc.client.email,

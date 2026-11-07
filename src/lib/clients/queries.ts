@@ -69,8 +69,10 @@ export async function getClientWithHistory(id: string) {
         include: {
           quotation: { select: { grandTotal: true, validUntil: true } },
           maintenance: { select: { nextMaintenanceDate: true, maintenanceDate: true } },
+          invoice: { select: { grandTotal: true, currency: true, dueDate: true, periodStart: true } },
         },
       },
+      services: { orderBy: { createdAt: "asc" } },
     },
   });
   if (!client) return null;

@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: "Documents" };
 
 type SearchParams = Promise<{ q?: string; type?: string; status?: string; from?: string; to?: string; page?: string }>;
 
-const TYPES = ["QUOTATION", "CR", "MAINTENANCE"] as const;
+const TYPES = ["QUOTATION", "CR", "MAINTENANCE", "INVOICE"] as const;
 const STATUSES = [
   { group: "Quotation", value: "DRAFT", label: "Draft" },
   { group: "Quotation", value: "SENT", label: "Sent" },
@@ -26,6 +26,10 @@ const STATUSES = [
   { group: "Maintenance", value: "SCHEDULED", label: "Scheduled" },
   { group: "Maintenance", value: "COMPLETED", label: "Completed" },
   { group: "Maintenance", value: "CANCELLED", label: "Cancelled" },
+  { group: "Invoice", value: "DRAFT", label: "Draft" },
+  { group: "Invoice", value: "SENT", label: "Sent" },
+  { group: "Invoice", value: "PAID", label: "Paid" },
+  { group: "Invoice", value: "VOID", label: "Void" },
 ] as const;
 
 const isDay = (s: string | undefined) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : "");
@@ -82,7 +86,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Se
           </Select>
           <Select name="status" defaultValue={status} aria-label="Status">
             <option value="">All statuses</option>
-            {["Quotation", "Maintenance"].map((group) => (
+            {["Quotation", "Maintenance", "Invoice"].map((group) => (
               <optgroup key={group} label={group}>
                 {STATUSES.filter((s) => s.group === group).map((s) => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -126,7 +130,7 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Se
                         <Link href={`/documents/${r.id}`} className="num font-medium text-foreground after:absolute after:inset-0 hover:text-primary">{r.number}</Link>
                       </td>
                       <td className="px-4 py-3.5">
-                        <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", r.type === "QUOTATION" ? "bg-primary-soft text-primary" : r.type === "CR" ? "bg-info-soft text-info" : "bg-warning-soft text-warning")}>
+                        <span className={cn("whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", r.type === "QUOTATION" ? "bg-primary-soft text-primary" : r.type === "CR" ? "bg-info-soft text-info" : r.type === "INVOICE" ? "bg-success-soft text-success" : "bg-warning-soft text-warning")}>
                           {DOCUMENT_TYPE_LABELS[r.type] ?? r.type}
                         </span>
                       </td>

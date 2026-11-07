@@ -5,13 +5,14 @@ import { db } from "@/lib/db";
 // The counter is incremented atomically, so two requests never receive the same number.
 // Numbers are never reused, even if the record that received one is later deleted.
 
-export type NumberKind = "CLIENT" | "QUOTATION" | "CR" | "MAINTENANCE";
+export type NumberKind = "CLIENT" | "QUOTATION" | "CR" | "MAINTENANCE" | "INV";
 
 const PREFIX: Record<NumberKind, string> = {
   CLIENT: "CL",
   QUOTATION: "QT",
   CR: "CR",
   MAINTENANCE: "MR",
+  INV: "INV",
 };
 
 /** CL-0001 for clients, QT-2026-0001 for documents. Pure, so it is easy to test. */

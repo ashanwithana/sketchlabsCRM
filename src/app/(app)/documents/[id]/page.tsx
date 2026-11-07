@@ -15,6 +15,7 @@ import { RetryEmailButton } from "@/components/email/email-controls";
 
 export const metadata: Metadata = { title: "Document" };
 
+// Invoices live in the repository and the client's Billing tab; they have no separate record page.
 const TYPE_ROUTE: Record<string, string> = { QUOTATION: "quotations", CR: "cr", MAINTENANCE: "maintenance" };
 
 export default async function DocumentDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -43,9 +44,11 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
             <a href={`/api/documents/${id}/pdf?download=1`} className={buttonVariants({ variant: "primary" })}>
               <Download /> Download current PDF
             </a>
-            <Link href={`/${typeRoute}/${id}`} className={buttonVariants({ variant: "secondary" })}>
-              <ExternalLink /> Open record
-            </Link>
+            {typeRoute && (
+              <Link href={`/${typeRoute}/${id}`} className={buttonVariants({ variant: "secondary" })}>
+                <ExternalLink /> Open record
+              </Link>
+            )}
           </>
         }
       />
@@ -55,7 +58,13 @@ export default async function DocumentDetailPage({ params }: { params: Promise<{
         <Fact label="Client"><span>{doc.client.companyName}</span><span className="num block text-xs text-muted">{doc.client.clientCode}</span></Fact>
         <Fact label="Current revision"><span className="num">{doc.currentRevision || "None yet"}</span></Fact>
         <Fact label="Amount">
-          <span className="num">{doc.quotation ? formatMoney(doc.quotation.grandTotal, doc.quotation.currency) : "—"}</span>
+          <span className="num">
+            {doc.quotation
+              ? formatMoney(doc.quotation.grandTotal, doc.quotation.currency)
+              : doc.invoice
+                ? formatMoney(doc.invoice.grandTotal, doc.invoice.currency)
+                : "—"}
+          </span>
         </Fact>
       </div>
 

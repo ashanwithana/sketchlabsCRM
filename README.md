@@ -11,6 +11,7 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Prisma w
 - [Setup](#setup)
 - [Configuration (.env)](#configuration-env)
 - [Email](#email)
+- [Scheduled invoicing](#scheduled-invoicing)
 - [PDF generation](#pdf-generation)
 - [Backup and restore](#backup-and-restore)
 - [Client approval links](#client-approval-links)
@@ -28,6 +29,7 @@ Built with Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS, Prisma w
 - **Quotations:** Line items with discount and tax, live totals, automatic `QT-YYYY-####` numbers, statuses (Draft, Sent, Pending, Approved, Rejected, Expired), duplicate, client approval links.
 - **CR documents:** Linked to a quotation of the same client, scope pre-filled from the quotation, customer signature pad, `CR-YYYY-####` numbers.
 - **Maintenance:** Service records linked to registered systems (software, websites, applications), parts, work performed, technician and customer signatures, automatic next-service scheduling, upcoming and overdue views, per-system service history.
+- **Billing:** Per-client recurring maintenance billing — a hand-maintained list of services with amounts, a schedule (monthly, quarterly, or annual on a fixed day of the month), and a daily cron that generates an `INV-YYYY-####` invoice from the current services and emails its PDF to the client. Invoices are also available manually ("Send invoice now") and appear in the repository.
 - **PDFs:** Shared layout with logo, company details, reference, client block, content, bank details, terms, signature blocks, and "Page X of Y" footers. PDFs are rendered on demand from the current data and are never stored on disk; each content change is recorded as a small revision entry.
 - **Email:** Send any document with its latest PDF attached, editable templates with placeholders, delivery log with retry for failures, test email.
 - **Repository:** One place for every document. Search by client or number, filter by type, status, and issue date, see revision history, CSV export.
@@ -76,6 +78,7 @@ Before the first real use, open **Settings** and enter your company name, addres
 | `SMTP_FROM` | no | Sender address shown to clients, for example `Acme <billing@acme.example>`. Defaults to the company email. |
 | `PDF_CHROME_PATH` | no | Path to a Chrome or Chromium binary. Auto-detected on macOS. |
 | `PUPPETEER_WS_ENDPOINT` | no | WebSocket URL of a remote headless Chrome (e.g. `wss://production-sfo.browserless.io?token=...`) for hosts without Chrome, such as Vercel. Takes precedence over `PDF_CHROME_PATH`. |
+| `CRON_SECRET` | for cron | Shared secret protecting `/api/cron/*`. Generate with `openssl rand -base64 32` and set the same value in Vercel so its Cron jobs can authenticate. |
 | `STORAGE_DIR` | no | Where logos, signatures, PDFs, and the outbox are stored. Default `storage/`. |
 | `BACKUP_DIR` | no | Where backups are written. Default `backups/`. |
 
@@ -109,6 +112,18 @@ With `SMTP_HOST` empty, every email is written to `storage/outbox/*.eml` with th
 ### What "Sent" means
 
 "Sent" means the mail server accepted the message. It does not confirm the recipient received it. Bounce tracking needs a provider webhook, which this version does not include.
+
+## Scheduled invoicing
+
+Each client has a **Billing** tab:
+
+- **Recurring services** — the lines you offer that client. You maintain the amounts by hand; every generated invoice snapshots the list, so editing a service never changes an invoice that was already sent.
+- **Billing schedule** — monthly, quarterly, or annual, plus a fixed send day (1–28) and an on/off switch for automatic sending. Activating a schedule anchors the first due date to the day you enable it.
+- **Send invoice now** — generates and emails an invoice immediately, outside the schedule.
+
+A daily Vercel Cron (`0 4 * * *` UTC) calls `/api/cron/invoices`, which for every client whose next due date has arrived generates one `INV-YYYY-####` invoice from the current services and emails its PDF to the client. At most one invoice is generated per client per run, so a backlog catches up over successive days instead of flooding the client. The route requires `Authorization: Bearer $CRON_SECRET`; set the same `CRON_SECRET` value in Vercel for the cron to run.
+
+Invoices are documents like any other: they appear in the repository with `DRAFT`/`SENT`/`PAID`/`VOID` statuses, their PDFs render on demand, and a failed cron email can be retried from the Email log.
 
 ## PDF generation
 
