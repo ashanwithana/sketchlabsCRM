@@ -7,7 +7,7 @@
     "nodejs_compat"
   ],
   "vars": {
-    "PUPPETEER_WS_ENDPOINT": "wss://production-sfo.browserless.io?token=2VZwkFK2nAKvIjI63890d74ed85eeee23cc065ff62f362d5d",
+    "PUPPETEER_WS_ENDPOINT": "dummy_endpoint",
     "SMTP_FROM": "hello@thesketchlabs.com",
     "SMTP_HOST": "smtp-relay.brevo.com",
     "SMTP_PASSWORD": "dummy_password",
