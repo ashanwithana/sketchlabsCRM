@@ -1,8 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-
+@import "tailwindcss";
 /*
  * Design tokens. Change colors here and every component follows.
  * Light theme only for now; dark tokens can be added later under [data-theme="dark"].
