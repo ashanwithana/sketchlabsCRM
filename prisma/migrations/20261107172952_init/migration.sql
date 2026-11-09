@@ -3,7 +3,7 @@
 -- The content below is copied from prisma/d1-init.sql
 
 -- CreateTable
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -14,7 +14,7 @@ CREATE TABLE "User" (
 );
 
 -- CreateTable
-CREATE TABLE "CompanySettings" (
+CREATE TABLE IF NOT EXISTS "CompanySettings" (
     "id" TEXT NOT NULL PRIMARY KEY DEFAULT 'company',
     "companyName" TEXT NOT NULL DEFAULT 'Your Company Name',
     "tagline" TEXT,
@@ -46,13 +46,13 @@ CREATE TABLE "CompanySettings" (
 );
 
 -- CreateTable
-CREATE TABLE "Sequence" (
+CREATE TABLE IF NOT EXISTS "Sequence" (
     "key" TEXT NOT NULL PRIMARY KEY,
     "value" INTEGER NOT NULL DEFAULT 0
 );
 
 -- CreateTable
-CREATE TABLE "Client" (
+CREATE TABLE IF NOT EXISTS "Client" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "clientCode" TEXT NOT NULL,
     "companyName" TEXT NOT NULL,
@@ -74,7 +74,7 @@ CREATE TABLE "Client" (
 );
 
 -- CreateTable
-CREATE TABLE "ClientService" (
+CREATE TABLE IF NOT EXISTS "ClientService" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "clientId" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE "ClientService" (
 );
 
 -- CreateTable
-CREATE TABLE "Equipment" (
+CREATE TABLE IF NOT EXISTS "Equipment" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "clientId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE "Equipment" (
 );
 
 -- CreateTable
-CREATE TABLE "Product" (
+CREATE TABLE IF NOT EXISTS "Product" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "name" TEXT NOT NULL,
     "description" TEXT,
@@ -112,7 +112,7 @@ CREATE TABLE "Product" (
 );
 
 -- CreateTable
-CREATE TABLE "Document" (
+CREATE TABLE IF NOT EXISTS "Document" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "type" TEXT NOT NULL,
     "number" TEXT NOT NULL,
@@ -126,7 +126,7 @@ CREATE TABLE "Document" (
 );
 
 -- CreateTable
-CREATE TABLE "Quotation" (
+CREATE TABLE IF NOT EXISTS "Quotation" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT NOT NULL,
     "validUntil" DATETIME NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE "Quotation" (
 );
 
 -- CreateTable
-CREATE TABLE "QuotationItem" (
+CREATE TABLE IF NOT EXISTS "QuotationItem" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "quotationId" TEXT NOT NULL,
     "position" INTEGER NOT NULL,
@@ -164,7 +164,7 @@ CREATE TABLE "QuotationItem" (
 );
 
 -- CreateTable
-CREATE TABLE "CRDocument" (
+CREATE TABLE IF NOT EXISTS "CRDocument" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT NOT NULL,
     "requestDetails" TEXT NOT NULL,
@@ -179,7 +179,7 @@ CREATE TABLE "CRDocument" (
 );
 
 -- CreateTable
-CREATE TABLE "MaintenanceRecord" (
+CREATE TABLE IF NOT EXISTS "MaintenanceRecord" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -199,7 +199,7 @@ CREATE TABLE "MaintenanceRecord" (
 );
 
 -- CreateTable
-CREATE TABLE "MaintenanceLine" (
+CREATE TABLE IF NOT EXISTS "MaintenanceLine" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "recordId" TEXT NOT NULL,
     "description" TEXT NOT NULL,
@@ -212,7 +212,7 @@ CREATE TABLE "MaintenanceLine" (
 );
 
 -- CreateTable
-CREATE TABLE "Invoice" (
+CREATE TABLE IF NOT EXISTS "Invoice" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT NOT NULL,
     "periodStart" DATETIME,
@@ -228,7 +228,7 @@ CREATE TABLE "Invoice" (
 );
 
 -- CreateTable
-CREATE TABLE "InvoiceLine" (
+CREATE TABLE IF NOT EXISTS "InvoiceLine" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "invoiceId" TEXT NOT NULL,
     "position" INTEGER NOT NULL,
@@ -241,7 +241,7 @@ CREATE TABLE "InvoiceLine" (
 );
 
 -- CreateTable
-CREATE TABLE "DocumentRevision" (
+CREATE TABLE IF NOT EXISTS "DocumentRevision" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT NOT NULL,
     "revision" INTEGER NOT NULL,
@@ -253,7 +253,7 @@ CREATE TABLE "DocumentRevision" (
 );
 
 -- CreateTable
-CREATE TABLE "EmailLog" (
+CREATE TABLE IF NOT EXISTS "EmailLog" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "documentId" TEXT,
     "revisionId" TEXT,
@@ -274,7 +274,7 @@ CREATE TABLE "EmailLog" (
 );
 
 -- CreateTable
-CREATE TABLE "ActivityLog" (
+CREATE TABLE IF NOT EXISTS "ActivityLog" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "action" TEXT NOT NULL,
     "entityType" TEXT NOT NULL,
@@ -284,73 +284,73 @@ CREATE TABLE "ActivityLog" (
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Client_clientCode_key" ON "Client"("clientCode");
+CREATE UNIQUE INDEX IF NOT EXISTS "Client_clientCode_key" ON "Client"("clientCode");
 
 -- CreateIndex
-CREATE INDEX "ClientService_clientId_idx" ON "ClientService"("clientId");
+CREATE INDEX IF NOT EXISTS "ClientService_clientId_idx" ON "ClientService"("clientId");
 
 -- CreateIndex
-CREATE INDEX "Equipment_clientId_idx" ON "Equipment"("clientId");
+CREATE INDEX IF NOT EXISTS "Equipment_clientId_idx" ON "Equipment"("clientId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Document_number_key" ON "Document"("number");
+CREATE UNIQUE INDEX IF NOT EXISTS "Document_number_key" ON "Document"("number");
 
 -- CreateIndex
-CREATE INDEX "Document_clientId_idx" ON "Document"("clientId");
+CREATE INDEX IF NOT EXISTS "Document_clientId_idx" ON "Document"("clientId");
 
 -- CreateIndex
-CREATE INDEX "Document_type_idx" ON "Document"("type");
+CREATE INDEX IF NOT EXISTS "Document_type_idx" ON "Document"("type");
 
 -- CreateIndex
-CREATE INDEX "Document_issueDate_idx" ON "Document"("issueDate");
+CREATE INDEX IF NOT EXISTS "Document_issueDate_idx" ON "Document"("issueDate");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Quotation_documentId_key" ON "Quotation"("documentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Quotation_documentId_key" ON "Quotation"("documentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Quotation_approvalToken_key" ON "Quotation"("approvalToken");
+CREATE UNIQUE INDEX IF NOT EXISTS "Quotation_approvalToken_key" ON "Quotation"("approvalToken");
 
 -- CreateIndex
-CREATE INDEX "Quotation_crId_idx" ON "Quotation"("crId");
+CREATE INDEX IF NOT EXISTS "Quotation_crId_idx" ON "Quotation"("crId");
 
 -- CreateIndex
-CREATE INDEX "QuotationItem_quotationId_idx" ON "QuotationItem"("quotationId");
+CREATE INDEX IF NOT EXISTS "QuotationItem_quotationId_idx" ON "QuotationItem"("quotationId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "CRDocument_documentId_key" ON "CRDocument"("documentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "CRDocument_documentId_key" ON "CRDocument"("documentId");
 
 -- CreateIndex
-CREATE INDEX "CRDocument_documentId_idx" ON "CRDocument"("documentId");
+CREATE INDEX IF NOT EXISTS "CRDocument_documentId_idx" ON "CRDocument"("documentId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "MaintenanceRecord_documentId_key" ON "MaintenanceRecord"("documentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "MaintenanceRecord_documentId_key" ON "MaintenanceRecord"("documentId");
 
 -- CreateIndex
-CREATE INDEX "MaintenanceRecord_cycle_idx" ON "MaintenanceRecord"("cycle");
+CREATE INDEX IF NOT EXISTS "MaintenanceRecord_cycle_idx" ON "MaintenanceRecord"("cycle");
 
 -- CreateIndex
-CREATE INDEX "MaintenanceLine_recordId_idx" ON "MaintenanceLine"("recordId");
+CREATE INDEX IF NOT EXISTS "MaintenanceLine_recordId_idx" ON "MaintenanceLine"("recordId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Invoice_documentId_key" ON "Invoice"("documentId");
+CREATE UNIQUE INDEX IF NOT EXISTS "Invoice_documentId_key" ON "Invoice"("documentId");
 
 -- CreateIndex
-CREATE INDEX "Invoice_periodStart_idx" ON "Invoice"("periodStart");
+CREATE INDEX IF NOT EXISTS "Invoice_periodStart_idx" ON "Invoice"("periodStart");
 
 -- CreateIndex
-CREATE INDEX "InvoiceLine_invoiceId_idx" ON "InvoiceLine"("invoiceId");
+CREATE INDEX IF NOT EXISTS "InvoiceLine_invoiceId_idx" ON "InvoiceLine"("invoiceId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "DocumentRevision_documentId_revision_key" ON "DocumentRevision"("documentId", "revision");
+CREATE UNIQUE INDEX IF NOT EXISTS "DocumentRevision_documentId_revision_key" ON "DocumentRevision"("documentId", "revision");
 
 -- CreateIndex
-CREATE INDEX "EmailLog_documentId_idx" ON "EmailLog"("documentId");
+CREATE INDEX IF NOT EXISTS "EmailLog_documentId_idx" ON "EmailLog"("documentId");
 
 -- CreateIndex
-CREATE INDEX "EmailLog_clientId_idx" ON "EmailLog"("clientId");
+CREATE INDEX IF NOT EXISTS "EmailLog_clientId_idx" ON "EmailLog"("clientId");
 
 -- CreateIndex
-CREATE INDEX "ActivityLog_createdAt_idx" ON "ActivityLog"("createdAt");
+CREATE INDEX IF NOT EXISTS "ActivityLog_createdAt_idx" ON "ActivityLog"("createdAt");
