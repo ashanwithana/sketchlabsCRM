@@ -7,13 +7,13 @@
     "nodejs_compat"
   ],
   "vars": {
-    "PUPPETEER_WS_ENDPOINT": "dummy_endpoint",
-    "SMTP_FROM": "hello@thesketchlabs.com",
-    "SMTP_HOST": "smtp-relay.brevo.com",
-    "SMTP_PASSWORD": "dummy_password",
-    "SMTP_PORT": "587",
-    "SMTP_SECURE": "false",
-    "SMTP_USER": "ashan@saberion.lk"
+    // "PUPPETEER_WS_ENDPOINT": "dummy_endpoint",
+    // "SMTP_FROM": "hello@thesketchlabs.com",
+    // "SMTP_HOST": "smtp-relay.brevo.com",
+    // "SMTP_PASSWORD": "dummy_password",
+    // "SMTP_PORT": "587",
+    // "SMTP_SECURE": "false",
+    // "SMTP_USER": "ashan@saberion.lk"
   },
   "assets": {
     "directory": ".open-next/assets",
